@@ -1,0 +1,193 @@
+#ifndef __PORT_H__
+#define __PORT_H__
+
+#include <iostream>
+#include <cassert>
+
+#include "model_utils/model_base.h"
+#include "model_utils/simulator.h"
+#include "log/logger.h"
+
+class PortBase
+  : public ModelBase
+{
+  friend class Simulator;
+public:
+  PortBase(const ModelBase* parent, const std::string& name)
+    : ModelBase(parent, name)
+  {
+    m_type = ModelType::PORT;
+    m_base_name = parent->base_name() + "." + name;
+  }
+
+protected:
+  void transfer() override {}
+  void process() override {}
+  void update() override {}
+
+  bool is_bound() const { return m_is_bound; }
+  void set_bound() { m_is_bound = true; }
+
+private:
+  bool m_is_bound{false};
+};
+
+template<class T>
+class StreamPortOut;
+
+template<class T>
+class StreamPortIn
+  : public PortBase
+{
+  friend class StreamPortOut<T>;
+public:
+  StreamPortIn(const ModelBase* parent, const std::string& name)
+    : PortBase(parent, name)
+  {}
+
+  void bind(StreamPortOut<T>& port_out)
+  {
+    if (is_bound()) {
+      _ERROR("port `{}` is already bound!!!", full_name());
+      assert(false);
+    }
+    m_port_out = &port_out;
+    set_bound();
+    port_out.m_port_in = this;
+    port_out.set_bound();
+  }
+
+  bool can_read()
+  {
+    if (get_stage() == CycStage::TRANSFER && m_port_out->m_vld) {
+      return true;
+    }
+    return false;
+  }
+
+  T read()
+  {
+    assert(get_stage() == CycStage::TRANSFER);
+    m_port_out->m_vld = false;
+    return m_port_out->m_data;
+  }
+
+private:
+  StreamPortOut<T>* m_port_out{nullptr};
+};
+
+
+template<class T>
+class StreamPortOut
+  : public PortBase
+{
+  friend class StreamPortIn<T>;
+public:
+  StreamPortOut(const ModelBase* parent, const std::string& name)
+    : PortBase(parent, name)
+  {}
+
+  void bind(StreamPortIn<T>& port_in)
+  {
+    if (is_bound()) {
+      _ERROR("port `{}` is already bound!!!", full_name());
+      assert(false);
+    }
+    m_port_in = &port_in;
+    set_bound();
+    port_in.m_port_out = this;
+    port_in.set_bound();
+  }
+
+  bool can_write()
+  {
+    if (get_stage() == CycStage::UPDATE && !m_vld) {
+      return true;
+    }
+    return false;
+  }
+
+  void write(const T& data)
+  {
+    assert(get_stage() == CycStage::UPDATE);
+    m_data = data;
+    m_vld = true;
+  }
+
+private:
+  StreamPortIn<T>* m_port_in{nullptr};
+  T m_data;
+  bool m_vld{false};
+};
+
+
+template<class T>
+class SignalPortOut;
+
+template<class T>
+class SignalPortIn
+  : public PortBase
+{
+  friend class SignalPortOut<T>;
+public:
+  SignalPortIn(const ModelBase* parent, const std::string& name)
+    : PortBase(parent, name)
+  {}
+
+  void bind(SignalPortOut<T>& port_out)
+  {
+    if (is_bound()) {
+      _ERROR("port `{}` is already bound!!!", full_name());
+      assert(false);
+    }
+    m_port_out = &port_out;
+    set_bound();
+    port_out.m_port_in = this;
+    port_out.set_bound();
+  }
+
+  T read()
+  {
+    assert(get_stage() == CycStage::TRANSFER);
+    return m_port_out->m_data;
+  }
+
+private:
+  const SignalPortOut<T>* m_port_out{nullptr};
+};
+
+template<class T>
+class SingalPortOut
+  : public PortBase
+{
+  friend class SignalPortIn<T>;
+public:
+  SingalPortOut(const ModelBase* parent, const std::string& name)
+    : PortBase(parent, name)
+  {}
+
+  void bind(SignalPortIn<T>& port_in)
+  {
+    if (is_bound()) {
+      _ERROR("port `{}` is already bound!!!", full_name());
+      assert(false);
+    }
+    m_port_in = &port_in;
+    set_bound();
+    port_in.m_port_out = this;
+    port_in.set_bound();
+  }
+
+  void write(const T& data)
+  {
+    assert(get_stage() == CycStage::UPDATE);
+    m_data = data;
+  }
+
+private:
+  SignalPortIn<T>* m_port_in{nullptr};
+  T m_data;
+};
+
+
+#endif  /* __PORT_H__ */
