@@ -71,43 +71,53 @@ Coord::Coord()
 void
 Coord::set_id_from_node_addr(const NodeAddr& addr)
 {
-  int id = 0;
-  id += addr.get(0);
-  id += (addr.get(1) * NocConfig::network_lvl_0_num);
-  id += (addr.get(2) * 
+  static const int id_0_weight = 1;
+
+  static const int id_1_weight = 
+    NocConfig::network_lvl_0_num;
+  
+  static const int id_2_weight = 
     NocConfig::network_lvl_0_num * 
-    NocConfig::network_lvl_1_num
-  );
-  id += (addr.get(3) * 
+    NocConfig::network_lvl_1_num;
+
+  static const int id_3_weight = 
     NocConfig::network_lvl_0_num * 
     NocConfig::network_lvl_1_num * 
-    NocConfig::network_lvl_2_num
-  );
+    NocConfig::network_lvl_2_num;
 
+  int id = 0;
+  id += addr.get(0) * id_0_weight;
+  id += addr.get(1) * id_1_weight;
+  id += addr.get(2) * id_2_weight;
+  id += addr.get(3) * id_3_weight;
   m_id = id;
 }
 
 void
 Coord::set_node_addr_from_id(int id)
 {
-  int id_3_weight = (
+  static const int id_0_weight = 1;
+
+  static const int id_1_weight = 
+    NocConfig::network_lvl_0_num;
+
+  static const int id_2_weight = 
     NocConfig::network_lvl_0_num * 
-    NocConfig::network_lvl_1_num *
-    NocConfig::network_lvl_2_num
-  );
+    NocConfig::network_lvl_1_num;
+
+  static const int id_3_weight = 
+    NocConfig::network_lvl_0_num * 
+    NocConfig::network_lvl_1_num * 
+    NocConfig::network_lvl_2_num;
+
   int id_3 = id / id_3_weight;
   m_addr.set(3, id_3);
 
   id = id % id_3_weight;
-  int id_2_weight = (
-    NocConfig::network_lvl_0_num * 
-    NocConfig::network_lvl_1_num
-  );
   int id_2 = id / id_2_weight;
   m_addr.set(2, id_2);
 
   id = id % id_2_weight;
-  int id_1_weight = NocConfig::network_lvl_0_num;
   int id_1 = id / id_1_weight;
   m_addr.set(1, id_1);
 
