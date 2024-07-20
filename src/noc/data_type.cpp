@@ -1,21 +1,66 @@
 #include "data_type.h"
+#include "config/noc_config.h"
 #include <assert.h>
+
+// -----------------------------------------------------------------------------
+// NodeAddr
+// -----------------------------------------------------------------------------
+
+NodeAddr::NodeAddr(int addr0, int addr1, int addr2, int addr3)
+  : m_addr({addr0, addr1, addr2, addr3})
+{}
+
+void
+NodeAddr::set(int lvl, int addr)
+{
+  assert(lvl < MAX_LEVEL);
+  m_addr[lvl] = addr;
+}
+
+int
+NodeAddr::get(int lvl) const
+{
+  return m_addr[lvl];
+}
+
+bool
+NodeAddr::is_matched(const NodeAddr& other)
+{
+  bool match = true;
+  for (int i = 0; i < MAX_LEVEL; ++i) {
+    if ((m_addr[i] == -1) || (other.m_addr[i] == -1)) {
+      continue;
+    }
+    if (m_addr[i] != other.m_addr[i]) {
+      match = false;
+      break;
+    }
+  }
+  return match;
+}
+
+void
+NodeAddr::reset()
+{
+  for (int i = 0; i < MAX_LEVEL; ++i) {
+    m_addr[i] = 0;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Coord
 // -----------------------------------------------------------------------------
 
-Coord::Coord(int x, int y)
-  : m_x(x)
-  , m_y(y)
+Coord::Coord(const NodeAddr& addr)
+  : m_addr(addr)
 {
-  setIDfromXY(x, y);
+  set_id_from_node_addr(addr);
 }
 
 Coord::Coord(int id)
   : m_id(id)
 {
-  setXYfromID(id);
+  set_node_addr_from_id(id);
 }
 
 Coord::Coord()
@@ -24,25 +69,57 @@ Coord::Coord()
 }
 
 void
-Coord::setIDfromXY(int x, int y)
+Coord::set_id_from_node_addr(const NodeAddr& addr)
 {
-  m_id = x * NocConfig::network_nrY + y;
+  int id = 0;
+  id += addr.get(0);
+  id += (addr.get(1) * NocConfig::network_lvl_0_num);
+  id += (addr.get(2) * 
+    NocConfig::network_lvl_0_num * 
+    NocConfig::network_lvl_1_num
+  );
+  id += (addr.get(3) * 
+    NocConfig::network_lvl_0_num * 
+    NocConfig::network_lvl_1_num * 
+    NocConfig::network_lvl_2_num
+  );
+
+  m_id = id;
 }
 
 void
-Coord::setXYfromID(int id)
+Coord::set_node_addr_from_id(int id)
 {
-  m_x = id / NocConfig::network_nrY;
-  // y = id % NocConfig::network_nrX;
-  m_y = id % GlobalConfig::NocConfig::network_nrX;
+  int id_3_weight = (
+    NocConfig::network_lvl_0_num * 
+    NocConfig::network_lvl_1_num *
+    NocConfig::network_lvl_2_num
+  );
+  int id_3 = id / id_3_weight;
+  m_addr.set(3, id_3);
+
+  id = id % id_3_weight;
+  int id_2_weight = (
+    NocConfig::network_lvl_0_num * 
+    NocConfig::network_lvl_1_num
+  );
+  int id_2 = id / id_2_weight;
+  m_addr.set(2, id_2);
+
+  id = id % id_2_weight;
+  int id_1_weight = NocConfig::network_lvl_0_num;
+  int id_1 = id / id_1_weight;
+  m_addr.set(1, id_1);
+
+  id = id % id_1_weight;
+  m_addr.set(0, id);
 }
 
 void
 Coord::reset()
 {
-  m_x = -1;
-  m_y = -1;
-  m_id = -1;
+  m_addr.reset();
+  m_id = -1;  // -1 is invalid for m_id
 }
 
 

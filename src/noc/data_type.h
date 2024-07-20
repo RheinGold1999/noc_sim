@@ -1,45 +1,61 @@
 #ifndef __DATA_TYPE_H__
 #define __DATA_TYPE_H__
 
-#include "noc_config.h"
-#include "global_config.h"
+// #include "config/noc_config.h"
+// #include "config/global_config.h"
 
 #include <list>
 #include <set>
+#include <array>
 #include <stdint.h>
 
 /**
+ * @brief NodeAddr is for router decision, which works similarly like IP addresses.
+ *        `m_addr[i] = -1` means the i-level address is masked.
+ */
+
+class NodeAddr
+{
+public:
+  static const int MAX_LEVEL = 4;
+
+public:
+  NodeAddr(int addr0 = 0, int addr1 = 0, int addr2 = 0, int addr3 = 0);
+
+  void set(int lvl, int val);
+  int get(int lvl) const;
+
+  /**
+   * @brief If any of m_addr[i] or other.m_addr[i] is -1, then i-level is matched.
+   *        If all levels are matched, the result is true.
+   */
+  bool is_matched(const NodeAddr& other);
+
+  void reset();
+
+private:
+  std::array<int, MAX_LEVEL> m_addr;
+};
+
+
+/**
  * @brief Coord is used to index all Nodes in the network
- * @param m_x: x coordinate
- * @param m_y: y coordinate
- * @param m_id: unique index of Node in the network, corresponds to a certain (x, y)
- * 
- * @example:
- *   y ^
- *     |
- *     *3   *7   *11  *15
- *     |
- *     *2   *6   *10  *14
- *     |
- *     *1   *5   *9   *13
- *     |    
- *     *0 --*4 --*8 --*12 ---->
- *                           x
+ * @param m_addr: node addr (e.g. 4.3.2.1)
+ * @param m_id: unique index of Node in the network, corresponds to a certain node addr
  */
 class Coord
 {
 public:
-  int m_x;
-  int m_y;
+  NodeAddr m_addr;
   int m_id;
 
 public:
-  Coord(int x, int y);
+  Coord(const NodeAddr& addr);
   Coord(int id);
   Coord();
 
-  void setIDfromXY(int x, int y);
-  void setXYfromID(int id);
+  void set_id_from_node_addr(const NodeAddr& addr);
+  void set_node_addr_from_id(int id);
 
   void reset();
 };
@@ -86,7 +102,10 @@ private:
   static uint64_t s_newed_pkt_cnt;    // records currently newed packets number
   static std::list<Packet*> s_pool;   // serves as memory manager
   static std::set<Packet*> s_inflights;  // for debug purpose
+};
 
+class PacketManager
+{
 public:
   static Packet* acquire(
     const Coord& src,
@@ -94,11 +113,10 @@ public:
     int flits_num,
     uint64_t creation_time,
     NocConfig::parity_e parity = NocConfig::PARITY_DONT_CARE
-  );                                  // serves as memory manager
-  static void release(Packet* pkt);   // serves as memory manager
-  static void destory();              // will be invoked before the end of simulation
+  );
+  static void release(Packet* pkt);
+  static void destory();
 };
-
 
 class Flit
 {
@@ -135,6 +153,12 @@ private:
   static Flit* acquire(Packet* owner, int id);
   static void release(Flit* flit);
   static void destroy();             // will be invoked before the end of simulation
+};
+
+class FlitManager
+{
+public:
+
 };
 
 

@@ -1,15 +1,13 @@
 #include "config/noc_config.h"
 
-INIT_PARAM(NocConfig, int, hellow, 0, "are")
-INIT_PARAM(NocConfig, int, world, 1, "are")
-INIT_PARAM(NocConfig, int, are, 0xf, "are")
-INIT_PARAM(NocConfig, double, you, 3.14, "you")
-INIT_PARAM(NocConfig, double, ok, 2.17, "ok")
+INIT_PARAM(NocConfig, int, network_lvl_0_num, 0, "network level 0 number")
+INIT_PARAM(NocConfig, int, network_lvl_1_num, 0, "network level 1 number")
+INIT_PARAM(NocConfig, int, network_lvl_2_num, 0, "network level 2 number")
+INIT_PARAM(NocConfig, int, network_lvl_3_num, 0, "network level 3 number")
 
 std::map<std::string, ParameterBase*> NocConfig::param_map = {
-  MAP_PARAM(NocConfig, hellow)
-  MAP_PARAM(NocConfig, world)
-  MAP_PARAM(NocConfig, are)
-  MAP_PARAM(NocConfig, you)
-  MAP_PARAM(NocConfig, ok)
+  MAP_PARAM(NocConfig, network_lvl_0_num)
+  MAP_PARAM(NocConfig, network_lvl_1_num)
+  MAP_PARAM(NocConfig, network_lvl_2_num)
+  MAP_PARAM(NocConfig, network_lvl_3_num)
 };
