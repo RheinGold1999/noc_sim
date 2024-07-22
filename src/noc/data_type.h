@@ -3,6 +3,7 @@
 
 // #include "config/noc_config.h"
 // #include "config/global_config.h"
+#include "noc/common.h"
 
 #include <list>
 #include <set>
@@ -63,6 +64,8 @@ public:
 
 class Packet
 {
+  friend class PacketManager;
+
 public:
   Coord m_src;
   Coord m_dst;
@@ -75,7 +78,7 @@ public:
   uint64_t m_creation_time;
   uint64_t m_injection_time;
 
-  NocConfig::parity_e m_parity;
+  Parity m_parity;
 
 private:
   Packet(
@@ -83,7 +86,7 @@ private:
     const Coord& dst, 
     int flits_num, 
     uint64_t creation_time,
-    NocConfig::parity_e parity = NocConfig::PARITY_DONT_CARE
+    Parity parity = Parity::DONT_CARE
   );
 
   void init(
@@ -91,17 +94,8 @@ private:
     const Coord& dst, 
     int flits_num, 
     uint64_t creation_time,
-    NocConfig::parity_e parity = NocConfig::PARITY_DONT_CARE
+    Parity parity = Parity::DONT_CARE
   );
-
-  // ---------------------------------------------------------------------------
-  // static members and methods
-  // ---------------------------------------------------------------------------
-private:
-  static uint64_t s_created_pkt_cnt;  // records currently created packets number
-  static uint64_t s_newed_pkt_cnt;    // records currently newed packets number
-  static std::list<Packet*> s_pool;   // serves as memory manager
-  static std::set<Packet*> s_inflights;  // for debug purpose
 };
 
 class PacketManager
@@ -112,15 +106,24 @@ public:
     const Coord& dst,
     int flits_num,
     uint64_t creation_time,
-    NocConfig::parity_e parity = NocConfig::PARITY_DONT_CARE
+    Parity parity = Parity::DONT_CARE
   );
   static void release(Packet* pkt);
   static void destory();
+  static int alloc_pkt_id();
+
+private:
+  static uint64_t s_alloc_pkt_cnt;    // records currently created packets number
+  static uint64_t s_newed_pkt_cnt;    // records currently newed packets number
+  static std::list<Packet*> s_pool;   // serves as memory manager
+  static std::set<Packet*> s_inflights;  // for debug purpose
 };
 
 class Flit
 {
   friend class Packet;
+  friend class FlitManager;
+
 public:
   Packet* m_owner;
   int m_id;
@@ -143,22 +146,18 @@ public:
 private:
   Flit(Packet* owner, int id);
   void init(Packet* owner, int id);
-
-  // ---------------------------------------------------------------------------
-  // static members and methods (serves as memory manager)
-  // ---------------------------------------------------------------------------
-private:
-  static uint64_t s_newed_flit_cnt;   // records currently newed flits number
-  static std::list<Flit*> s_pool;
-  static Flit* acquire(Packet* owner, int id);
-  static void release(Flit* flit);
-  static void destroy();             // will be invoked before the end of simulation
 };
 
 class FlitManager
 {
 public:
+  static Flit* acquire(Packet* owner, int id);
+  static void release(Flit* flit);
+  static void destroy();             // will be invoked before the end of simulation
 
+private:
+  static uint64_t s_newed_flit_cnt;   // records currently newed flits number
+  static std::list<Flit*> s_pool;
 };
 
 

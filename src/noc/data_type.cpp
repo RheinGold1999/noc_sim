@@ -142,11 +142,11 @@ Packet::Packet(
   const Coord& dst, 
   int flits_num, 
   uint64_t creation_time,
-  NocConfig::Parity parity
+  Parity parity
 ) 
   : m_src(src)
   , m_dst(dst)
-  , m_id(Packet::s_created_pkt_cnt++)
+  , m_id(PacketManager::alloc_pkt_id())
   , m_total_flits_num(flits_num)
   , m_arrived_flits_num(0)
   , m_parity(parity)
@@ -155,7 +155,7 @@ Packet::Packet(
 {
   m_flits_list.clear();
   for (int i = 0; i < m_total_flits_num; ++i) {
-    m_flits_list.push_back(Flit::acquire(this, i));
+    m_flits_list.push_back(FlitManager::acquire(this, i));
   }
   m_flits_list.front()->m_is_head = true;
   m_flits_list.back()->m_is_tail = true;
@@ -167,12 +167,12 @@ Packet::init(
   const Coord& dst, 
   int flits_num, 
   uint64_t creation_time,
-  NocConfig::Parity parity
+  Parity parity
 )
 {
   m_src = src;
   m_dst = dst;
-  m_id = Packet::s_created_pkt_cnt++;
+  m_id = PacketManager::alloc_pkt_id();
 
   m_total_flits_num = flits_num;
   m_arrived_flits_num = 0;
@@ -183,23 +183,32 @@ Packet::init(
 
   assert(m_flits_list.empty());
   for (int i = 0; i < m_total_flits_num; ++i) {
-    m_flits_list.push_back(Flit::acquire(this, i));
+    m_flits_list.push_back(FlitManager::acquire(this, i));
   }
   m_flits_list.front()->m_is_head = true;
   m_flits_list.back()->m_is_tail = true;
 }
 
-uint64_t Packet::s_created_pkt_cnt = 0;
 
-uint64_t Packet::s_newed_pkt_cnt = 0;
+// -----------------------------------------------------------------------------
+// Packet Manager
+// -----------------------------------------------------------------------------
+uint64_t PacketManager::s_alloc_pkt_cnt = 0;
+uint64_t PacketManager::s_newed_pkt_cnt = 0;
+
+int
+PacketManager::alloc_pkt_id()
+{
+  return s_alloc_pkt_cnt++;
+}
 
 Packet*
-Packet::acquire(
+PacketManager::acquire(
   const Coord& src,
   const Coord& dst,
   int flits_num,
   uint64_t creation_time,
-  NocConfig::Parity parity
+  Parity parity
 )
 {
   Packet* pkt = nullptr;
@@ -216,10 +225,10 @@ Packet::acquire(
 }
 
 void
-Packet::release(Packet* pkt)
+PacketManager::release(Packet* pkt)
 {
   for (auto flit : pkt->m_flits_list) {
-    Flit::release(flit);
+    FlitManager::release(flit);
   }
   pkt->m_flits_list.clear();
 
@@ -230,7 +239,7 @@ Packet::release(Packet* pkt)
 }
 
 void
-Packet::destory()
+PacketManager::destory()
 {
   if (s_inflights.size() > 0) {
     // TODO: print warning and dump all inflight pkt
@@ -292,10 +301,14 @@ Flit::init(Packet* owner, int id)
   m_time_in_imd_ring = 0;
 }
 
-uint64_t Flit::s_newed_flit_cnt = 0;
+
+// -----------------------------------------------------------------------------
+// Flit Manager
+// -----------------------------------------------------------------------------
+uint64_t FlitManager::s_newed_flit_cnt = 0;
 
 Flit*
-Flit::acquire(Packet* owner, int id)
+FlitManager::acquire(Packet* owner, int id)
 {
   Flit* flit = nullptr;
   if (s_pool.empty()) {
@@ -310,13 +323,13 @@ Flit::acquire(Packet* owner, int id)
 }
 
 void
-Flit::release(Flit* flit)
+FlitManager::release(Flit* flit)
 {
   s_pool.push_back(flit);
 }
 
 void
-Flit::destroy()
+FlitManager::destroy()
 {
   assert(s_pool.size() == s_newed_flit_cnt);
   for (auto flit : s_pool) {
