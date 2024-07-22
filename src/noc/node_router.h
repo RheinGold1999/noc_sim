@@ -35,7 +35,7 @@ public:
   void update() override;
 
   bool is_this_dst(const Flit* flit) const;
-  void receive_pkt(const Packet* pkt);
+  void receive_pkt(Packet* pkt);
 
 private:
   FIFO<Flit*>** m_inj_que;

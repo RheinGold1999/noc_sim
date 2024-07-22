@@ -120,7 +120,7 @@ NodeRouter::update()
 
 
 void
-NodeRouter::receive_pkt(const Packet* pkt)
+NodeRouter::receive_pkt(Packet* pkt)
 {
   // remove all the related flits in ejection robs
   for (auto flit : pkt->m_flits_list) {
@@ -129,5 +129,6 @@ NodeRouter::receive_pkt(const Packet* pkt)
     }
   }
   m_inflight_pkts.erase(pkt);
+  PacketManager::release(pkt);
 }
 
