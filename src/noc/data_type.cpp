@@ -132,6 +132,11 @@ Coord::reset()
   m_id = -1;  // -1 is invalid for m_id
 }
 
+bool
+Coord::is_equal(const Coord& other)
+{
+  return m_addr.is_matched(other.m_addr);
+}
 
 // -----------------------------------------------------------------------------
 // Packet
@@ -299,6 +304,18 @@ Flit::init(Packet* owner, int id)
   m_time_in_src_ring = 0;
   m_time_in_dst_ring = 0;
   m_time_in_imd_ring = 0;
+}
+
+Coord
+Flit::get_dst() const
+{
+  return m_owner->m_dst;
+}
+
+Coord
+Flit::get_src() const
+{
+  return m_owner->m_src;
 }
 
 

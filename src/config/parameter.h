@@ -41,6 +41,7 @@ public:
   {}
 
   operator T () { return m_val; }
+  T val() { return m_val; }
 
   std::string name() { return m_name; }
   void set_val(T val) { m_val = val; }

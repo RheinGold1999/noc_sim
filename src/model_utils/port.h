@@ -67,7 +67,7 @@ public:
 
   T read()
   {
-    assert(get_stage() == CycStage::TRANSFER);
+    assert(can_read());
     m_port_out->m_vld = false;
     return m_port_out->m_data;
   }
@@ -109,7 +109,7 @@ public:
 
   void write(const T& data)
   {
-    assert(get_stage() == CycStage::UPDATE);
+    assert(can_write());
     m_data = data;
     m_vld = true;
   }

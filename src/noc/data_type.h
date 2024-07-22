@@ -8,7 +8,7 @@
 #include <list>
 #include <set>
 #include <array>
-#include <stdint.h>
+#include <cstdint>
 
 /**
  * @brief NodeAddr is for router decision, which works similarly like IP addresses.
@@ -57,8 +57,8 @@ public:
 
   void set_id_from_node_addr(const NodeAddr& addr);
   void set_node_addr_from_id(int id);
-
   void reset();
+  bool is_equal(const Coord& other);
 };
 
 
@@ -142,6 +142,9 @@ public:
   uint64_t m_time_in_src_ring;
   uint64_t m_time_in_dst_ring;
   uint64_t m_time_in_imd_ring;  // intermediate ring
+  
+  Coord get_dst() const;
+  Coord get_src() const;
 
 private:
   Flit(Packet* owner, int id);
