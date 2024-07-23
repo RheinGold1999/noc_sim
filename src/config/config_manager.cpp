@@ -1,3 +1,5 @@
+#include <regex>
+
 #include "config/config_manager.h"
 #include "config/global_config.h"
 #include "config/noc_config.h"
@@ -29,7 +31,7 @@ ConfigManager::parse_args(int argc, char** argv)
       }
       if (!is_found_in_cfg_map) {
         _ERROR("config parameter `{}` does NOT exist!!!", opt);
-        assert(false);
+        abort();
       }
     }
     ConfigManager::update_param(*param_map_ptr, opt, val);
@@ -46,7 +48,7 @@ ConfigManager::update_param(
   static std::regex name_pat("-{1,2}config\\S*\\.(\\w+)");
   static std::smatch name_matchs;
   bool name_matched = std::regex_match(opt, name_matchs, name_pat);
-  assert(name_matched);
+  _ASSERT(name_matched);
   std::string param_name = name_matchs[1];
 
   static std::regex type_int_dec_pat("(\\d+)");
@@ -67,12 +69,12 @@ ConfigManager::update_param(
     } else {
       // std::cout << "parameter `" << param_name << "` type doesn't found!!!" << std::endl;
       _ERROR("parameter `{}` type does NOT found!!!", param_name);
-      assert(false);
+      abort();
     }
   } else {
     // std::cout << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
     _ERROR("parameter `{}` does NOT exist!!!", param_name);
-    assert(false);
+    abort();
   }
 }
 
@@ -87,12 +89,12 @@ ConfigManager::map_check_and_set(
   if (param_map.count(param_name) != 1) {
     // std::cout << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
     _ERROR("parameter `{}` does NOT exist!!!", param_name);
-    assert(false);
+    abort();
   }
   if (param_map[param_name]->m_type != typeid(T)) {
     // std::cout << "parameter `" << param_name << "` type doesn't match!!!" << std::endl;
     _ERROR("parameter `{}` type does NOT match!!!", param_name);
-    assert(false);
+    abort();
   }
   reinterpret_cast<Parameter<T>*>(param_map[param_name])->set_val(param_val);
 }

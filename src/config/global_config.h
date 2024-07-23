@@ -1,13 +1,7 @@
 #ifndef __GLOBAL_CONFIG_H__
 #define __GLOBAL_CONFIG_H__
 
-#include <regex>
-#include <cassert>
-
 #include "config/config_base.h"
-
-#define DEMO(args...) std::cout << #args << " = " << args << std::endl
-#define COUT(args...) std::cout << args << std::endl
 
 struct GlobalConfig
   : public ConfigBase

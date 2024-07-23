@@ -1,6 +1,5 @@
 #include "config/global_config.h"
 #include "log/logger.h"
-#include <cassert>
 
 // -----------------------------------------------------------------------------
 // Add parameters in this area

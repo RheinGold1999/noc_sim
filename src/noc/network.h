@@ -4,9 +4,6 @@
 class Network
 {
 
-public:
-  void setup();
-  void step();
 };
 
 #endif  /* __NETWORK_H__ */

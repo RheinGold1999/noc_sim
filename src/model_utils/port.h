@@ -2,7 +2,6 @@
 #define __PORT_H__
 
 #include <iostream>
-#include <cassert>
 
 #include "model_utils/model_base.h"
 #include "model_utils/simulator.h"
@@ -48,8 +47,8 @@ public:
   void bind(StreamPortOut<T>& port_out)
   {
     if (is_bound()) {
-      _ERROR("port `{}` is already bound!!!", full_name());
-      assert(false);
+      ERROR("port `{}` is already bound!!!", full_name());
+      abort();
     }
     m_port_out = &port_out;
     set_bound();
@@ -67,7 +66,7 @@ public:
 
   T read()
   {
-    assert(can_read());
+    ASSERT(can_read());
     m_port_out->m_vld = false;
     return m_port_out->m_data;
   }
@@ -90,8 +89,8 @@ public:
   void bind(StreamPortIn<T>& port_in)
   {
     if (is_bound()) {
-      _ERROR("port `{}` is already bound!!!", full_name());
-      assert(false);
+      ERROR("port `{}` is already bound!!!", full_name());
+      abort();
     }
     m_port_in = &port_in;
     set_bound();
@@ -109,7 +108,7 @@ public:
 
   void write(const T& data)
   {
-    assert(can_write());
+    ASSERT(can_write());
     m_data = data;
     m_vld = true;
   }
@@ -137,8 +136,8 @@ public:
   void bind(SignalPortOut<T>& port_out)
   {
     if (is_bound()) {
-      _ERROR("port `{}` is already bound!!!", full_name());
-      assert(false);
+      ERROR("port `{}` is already bound!!!", full_name());
+      abort();
     }
     m_port_out = &port_out;
     set_bound();
@@ -148,7 +147,7 @@ public:
 
   T read()
   {
-    assert(get_stage() == CycStage::TRANSFER);
+    ASSERT(get_stage() == CycStage::TRANSFER);
     return m_port_out->m_data;
   }
 
@@ -169,8 +168,8 @@ public:
   void bind(SignalPortIn<T>& port_in)
   {
     if (is_bound()) {
-      _ERROR("port `{}` is already bound!!!", full_name());
-      assert(false);
+      ERROR("port `{}` is already bound!!!", full_name());
+      abort();
     }
     m_port_in = &port_in;
     set_bound();
@@ -180,7 +179,7 @@ public:
 
   void write(const T& data)
   {
-    assert(get_stage() == CycStage::UPDATE);
+    ASSERT(get_stage() == CycStage::UPDATE);
     m_data = data;
   }
 

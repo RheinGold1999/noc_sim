@@ -87,12 +87,9 @@ NodeRouter::transfer()
           // TODO: write to retransmit buffer
 
         }
-        m_arb_flits[i] = nullptr;
       } else {
         m_arb_flits[i] = flit;
       }
-    } else {
-      m_arb_flits[i] = nullptr;
     }
   }
 }
@@ -118,6 +115,7 @@ NodeRouter::update()
     assert(inj_o[i]->can_write());
     if (m_arb_flits[i]) {
       inj_o[i]->write(m_arb_flits[i]);
+      m_arb_flits[i] = nullptr;
     }
   }
 }

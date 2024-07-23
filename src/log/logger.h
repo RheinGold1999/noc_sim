@@ -158,6 +158,14 @@ do { \
   Top::logger->critical(src_loc, fmt, ##args); \
 } while (0);
 
+#define _ASSERT(expr) \
+do { \
+  if (!(expr)) { \
+    _CRITICAL("{} failed!!!", #expr); \
+    abort(); \
+  } \
+} while (0);
+
 // -----------------------------------------------------------------------------
 // Convenient Logger Macros for ModelBase
 // -----------------------------------------------------------------------------
@@ -198,5 +206,12 @@ do { \
   m_logger->critical(src_loc, fmt, ##args); \
 } while (0);
 
+#define ASSERT(expr) \
+do { \
+  if (!(expr)) { \
+    CRITICAL("{} failed!!!", #expr); \
+    abort(); \
+  } \
+} while (0);
 
 #endif /* __LOGGER_H__ */

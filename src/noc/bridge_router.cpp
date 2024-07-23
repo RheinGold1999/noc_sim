@@ -89,7 +89,6 @@ BridgeRouter::transfer()
       if (is_loc2glb(flit)) {
         if (m_loc2glb_que[i]->can_write()) {
           m_loc2glb_que[i]->write(flit);
-          m_loc_arb_flits[i] = nullptr;
         } else {
           flit->m_is_deflected = true;
           flit->m_deflections_cnt++;
@@ -98,8 +97,6 @@ BridgeRouter::transfer()
       } else {
         m_loc_arb_flits[i] = flit;
       }
-    } else {
-      m_loc_arb_flits[i] = nullptr;
     }
   }
 
@@ -112,7 +109,6 @@ BridgeRouter::transfer()
       if (is_glb2loc(flit)) {
         if (m_glb2loc_que[i]->can_write()) {
           m_glb2loc_que[i]->write(flit);
-          m_glb_arb_flits[i] = nullptr;
         } else {
           flit->m_is_deflected = true;
           flit->m_deflections_cnt++;
@@ -121,10 +117,10 @@ BridgeRouter::transfer()
       } else {
         m_glb_arb_flits[i] = flit;
       }
-    } else {
-      m_glb_arb_flits[i] = nullptr;
     }
   }
+
+  // TODO: add `Swap Rule`
 }
 
 void
@@ -141,11 +137,13 @@ BridgeRouter::update()
     assert(loc_inj_o[i]->can_write());
     if (m_loc_arb_flits[i]) {
       loc_inj_o[i]->write(m_loc_arb_flits[i]);
+      m_loc_arb_flits[i] = nullptr;
     }
 
     assert(glb_inj_o[i]->can_write());
     if (m_glb_arb_flits[i]) {
       glb_inj_o[i]->write(m_glb_arb_flits[i]);
+      m_glb_arb_flits[i] = nullptr;
     }
   }
 }
@@ -171,7 +169,7 @@ BridgeRouter::check_addr(const NodeAddr& addr)
     if (found_non_mask && val == NodeAddr::MASKED) {
       ERROR("bridge addr {}.{}.{}.{} is unexpected!!!", 
         addr.get(3), addr.get(2), addr.get(1), addr.get(0));
-      assert(false);
+      abort();
     }
     if (val != NodeAddr::MASKED) {
       found_non_mask = true;
