@@ -167,8 +167,7 @@ BridgeRouter::check_addr(const NodeAddr& addr)
   for (int i = 0; i < NodeAddr::MAX_LEVEL; ++i) {
     int val = addr.get(i);
     if (found_non_mask && val == NodeAddr::MASKED) {
-      ERROR("bridge addr {}.{}.{}.{} is unexpected!!!", 
-        addr.get(3), addr.get(2), addr.get(1), addr.get(0));
+      ERROR("bridge addr {} is unexpected!!!", addr.to_str());
       abort();
     }
     if (val != NodeAddr::MASKED) {

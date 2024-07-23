@@ -1,14 +1,13 @@
 #ifndef __DATA_TYPE_H__
 #define __DATA_TYPE_H__
 
-// #include "config/noc_config.h"
-// #include "config/global_config.h"
 #include "noc/common.h"
 
 #include <list>
 #include <set>
 #include <array>
 #include <cstdint>
+#include <string>
 
 /**
  * @brief NodeAddr is for router decision, which works similarly like IP addresses.
@@ -33,10 +32,12 @@ public:
    * @brief If any of m_addr[i] or other.m_addr[i] is -1, then i-level is matched.
    *        If all levels are matched, the result is true.
    */
-  bool is_matched(const NodeAddr& other);
-  bool is_matched(const Coord& coord);
+  bool is_matched(const NodeAddr& other) const;
+  bool is_matched(const Coord& coord) const;
 
   void reset();
+
+  std::string to_str() const;
 
 private:
   std::array<int, MAX_LEVEL> m_addr;
@@ -51,10 +52,6 @@ private:
 class Coord
 {
 public:
-  NodeAddr m_addr;
-  int m_id;
-
-public:
   Coord(const NodeAddr& addr);
   Coord(int id);
   Coord();
@@ -63,6 +60,13 @@ public:
   void set_node_addr_from_id(int id);
   void reset();
   bool is_equal(const Coord& other);
+  NodeAddr get_addr() const;
+  int get_id() const;
+  std::string to_str() const;
+
+private:
+  NodeAddr m_addr;
+  int m_id;
 };
 
 class Flit;

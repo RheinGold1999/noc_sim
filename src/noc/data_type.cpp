@@ -1,6 +1,8 @@
 #include "noc/data_type.h"
 #include "config/noc_config.h"
-#include <assert.h>
+#include "log/logger.h"
+
+#include <sstream>
 
 // -----------------------------------------------------------------------------
 // NodeAddr
@@ -13,7 +15,7 @@ NodeAddr::NodeAddr(int addr0, int addr1, int addr2, int addr3)
 void
 NodeAddr::set(int lvl, int addr)
 {
-  assert(lvl < MAX_LEVEL);
+  _ASSERT(lvl < MAX_LEVEL);
   m_addr[lvl] = addr;
 }
 
@@ -24,11 +26,11 @@ NodeAddr::get(int lvl) const
 }
 
 bool
-NodeAddr::is_matched(const NodeAddr& other)
+NodeAddr::is_matched(const NodeAddr& other) const
 {
   bool match = true;
   for (int i = 0; i < MAX_LEVEL; ++i) {
-    if ((m_addr[i] == -1) || (other.m_addr[i] == -1)) {
+    if ((m_addr[i] == MASKED) || (other.m_addr[i] == MASKED)) {
       continue;
     }
     if (m_addr[i] != other.m_addr[i]) {
@@ -40,9 +42,9 @@ NodeAddr::is_matched(const NodeAddr& other)
 }
 
 bool
-NodeAddr::is_matched(const Coord& coord)
+NodeAddr::is_matched(const Coord& coord) const
 {
-  return is_matched(coord.m_addr);
+  return is_matched(coord.get_addr());
 }
 
 void
@@ -51,6 +53,24 @@ NodeAddr::reset()
   for (int i = 0; i < MAX_LEVEL; ++i) {
     m_addr[i] = 0;
   }
+}
+
+std::string
+NodeAddr::to_str() const
+{
+  std::ostringstream os;
+  os << "NodeAddr: ";
+  for (int i = MAX_LEVEL - 1; i >= 0; --i) {
+    if (get(i) == MASKED) {
+      os << "X";
+    } else {
+      os << get(i);
+    }
+    if (i != 0) {
+      os << ".";
+    }
+  }
+  return os.str();
 }
 
 // -----------------------------------------------------------------------------
@@ -144,6 +164,28 @@ Coord::is_equal(const Coord& other)
   return m_addr.is_matched(other.m_addr);
 }
 
+NodeAddr
+Coord::get_addr() const
+{
+  return m_addr;
+}
+
+int
+Coord::get_id() const
+{
+  return m_id;
+}
+
+std::string
+Coord::to_str() const
+{
+  std::ostringstream os;
+  os << "Coord: {id: " << m_id;
+  os << " addr: " << m_addr.to_str();
+  os << "}";
+  return os.str();
+}
+
 // -----------------------------------------------------------------------------
 // Packet
 // -----------------------------------------------------------------------------
@@ -192,7 +234,7 @@ Packet::init(
   m_creation_time = creation_time;
   m_injection_time = UINT16_MAX;
 
-  assert(m_flits_list.empty());
+  _ASSERT(m_flits_list.empty());
   for (int i = 0; i < m_total_flits_num; ++i) {
     m_flits_list.push_back(FlitManager::acquire(this, i));
   }
@@ -245,7 +287,7 @@ PacketManager::release(Packet* pkt)
   }
   pkt->m_flits_list.clear();
 
-  assert(s_inflights.count(pkt) > 0);
+  _ASSERT(s_inflights.count(pkt) > 0);
   s_inflights.erase(pkt);
 
   s_pool.push_back(pkt);
@@ -262,7 +304,7 @@ PacketManager::destory()
     }
   }
 
-  assert(s_pool.size() == s_newed_pkt_cnt);
+  _ASSERT(s_pool.size() == s_newed_pkt_cnt);
   for (auto pkt : s_pool) {
     delete pkt;
   }
@@ -357,7 +399,7 @@ FlitManager::release(Flit* flit)
 void
 FlitManager::destroy()
 {
-  assert(s_pool.size() == s_newed_flit_cnt);
+  _ASSERT(s_pool.size() == s_newed_flit_cnt);
   for (auto flit : s_pool) {
     delete flit;
   }

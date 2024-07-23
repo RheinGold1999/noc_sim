@@ -1,9 +1,14 @@
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
-class Network
-{
+#include "model_utils/module_base.h"
 
+class Network
+  : public ModuleBase
+{
+public:
+  Network(const ModelBase* parent, const std::string& name);
+  ~Network();
 };
 
 #endif  /* __NETWORK_H__ */
