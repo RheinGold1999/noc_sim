@@ -41,7 +41,7 @@ private:
   FIFO<Flit*>** m_inj_que;
   FIFO<Flit*>** m_eje_rob;
   Coord m_coord;
-  Flit** m_link_flits;
+  Flit** m_arb_flits;
 
   std::set<const Packet*> m_inflight_pkts;
 };

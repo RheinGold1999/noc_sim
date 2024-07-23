@@ -1,4 +1,4 @@
-#include "data_type.h"
+#include "noc/data_type.h"
 #include "config/noc_config.h"
 #include <assert.h>
 
@@ -37,6 +37,12 @@ NodeAddr::is_matched(const NodeAddr& other)
     }
   }
   return match;
+}
+
+bool
+NodeAddr::is_matched(const Coord& coord)
+{
+  return is_matched(coord.m_addr);
 }
 
 void
@@ -200,6 +206,8 @@ Packet::init(
 // -----------------------------------------------------------------------------
 uint64_t PacketManager::s_alloc_pkt_cnt = 0;
 uint64_t PacketManager::s_newed_pkt_cnt = 0;
+std::list<Packet*> PacketManager::s_pool = std::list<Packet*>();
+std::set<Packet*> PacketManager::s_inflights = std::set<Packet*>();
 
 int
 PacketManager::alloc_pkt_id()
@@ -323,6 +331,7 @@ Flit::get_src() const
 // Flit Manager
 // -----------------------------------------------------------------------------
 uint64_t FlitManager::s_newed_flit_cnt = 0;
+std::list<Flit*> FlitManager::s_pool = std::list<Flit*>();
 
 Flit*
 FlitManager::acquire(Packet* owner, int id)

@@ -15,10 +15,13 @@
  *        `m_addr[i] = -1` means the i-level address is masked.
  */
 
+class Coord;
+
 class NodeAddr
 {
 public:
   static const int MAX_LEVEL = 4;
+  static const int MASKED = -1;   // used by BridgeRouter
 
 public:
   NodeAddr(int addr0 = 0, int addr1 = 0, int addr2 = 0, int addr3 = 0);
@@ -31,6 +34,7 @@ public:
    *        If all levels are matched, the result is true.
    */
   bool is_matched(const NodeAddr& other);
+  bool is_matched(const Coord& coord);
 
   void reset();
 
@@ -61,6 +65,7 @@ public:
   bool is_equal(const Coord& other);
 };
 
+class Flit;
 
 class Packet
 {

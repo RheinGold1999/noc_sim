@@ -35,7 +35,7 @@ public:
   {
     assert(can_read());
     T elem = m_queue.front();
-    m_queue.pop_front()
+    m_queue.pop_front();
     return elem;
   }
 
@@ -58,7 +58,7 @@ public:
    */
   void remove(const T& elem)
   {
-    m_queue.remove(T);
+    m_queue.remove(elem);
   }
 
 private:

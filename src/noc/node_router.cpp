@@ -11,11 +11,13 @@ NodeRouter::NodeRouter(
   : ModuleBase(parent, name),
     m_coord(addr)
 {
-  inj_o = new StreamPortOut<Flit*>*[NocConfig::ring_width];
-  eje_i = new StreamPortIn<Flit*>*[NocConfig::ring_width];
-  m_inj_que = new FIFO<Flit*>*[NocConfig::ring_width];
-  m_eje_rob = new FIFO<Flit*>*[NocConfig::ring_width];
-  m_link_flits = new Flit*[NocConfig::ring_width];
+  inj_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
+  eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
+
+  m_inj_que = new FIFO<Flit*>* [NocConfig::ring_width];
+  m_eje_rob = new FIFO<Flit*>* [NocConfig::ring_width];
+
+  m_arb_flits = new Flit* [NocConfig::ring_width];
 
   std::ostringstream os;
   for (int i = 0; i < NocConfig::ring_width; ++i) {
@@ -35,7 +37,7 @@ NodeRouter::NodeRouter(
     os << "eje_que_" << i;
     m_eje_rob[i] = new FIFO<Flit*>(this, os.str(), NocConfig::node_eje_que_depth);
 
-    m_link_flits[i] = nullptr;
+    m_arb_flits[i] = nullptr;
   }
 
   m_inflight_pkts.clear();
@@ -55,7 +57,7 @@ NodeRouter::~NodeRouter()
   delete [] m_inj_que;
   delete [] m_eje_rob;
 
-  delete [] m_link_flits;
+  delete [] m_arb_flits;
 }
 
 bool
@@ -85,11 +87,12 @@ NodeRouter::transfer()
           // TODO: write to retransmit buffer
 
         }
+        m_arb_flits[i] = nullptr;
       } else {
-        m_link_flits[i] = flit;
+        m_arb_flits[i] = flit;
       }
     } else {
-      m_link_flits[i] = nullptr;
+      m_arb_flits[i] = nullptr;
     }
   }
 }
@@ -98,12 +101,12 @@ void
 NodeRouter::process()
 {
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    if (!m_link_flits[i] && m_inj_que[i]->can_read()) {
+    if (!m_arb_flits[i] && m_inj_que[i]->can_read()) {
       Flit* flit = m_inj_que[i]->read();
       if (flit->m_is_head) {
         m_inflight_pkts.insert(flit->m_owner);
       }
-      m_link_flits[i] = flit;
+      m_arb_flits[i] = flit;
     }
   }
 }
@@ -113,9 +116,10 @@ NodeRouter::update()
 {
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     assert(inj_o[i]->can_write());
-    inj_o[i]->write(m_link_flits[i]);
+    if (m_arb_flits[i]) {
+      inj_o[i]->write(m_arb_flits[i]);
+    }
   }
-
 }
 
 

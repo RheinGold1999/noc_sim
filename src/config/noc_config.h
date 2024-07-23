@@ -17,6 +17,9 @@ struct NocConfig
 
   DECL_PARAM(int, node_inj_que_depth)
   DECL_PARAM(int, node_eje_que_depth)
+  DECL_PARAM(int, bridge_inj_que_depth)
+  DECL_PARAM(int, bridge_eje_que_depth)
+
 };
 
 #endif  /* __NOC_CONFIG_H__ */
