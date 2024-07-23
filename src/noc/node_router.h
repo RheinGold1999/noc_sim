@@ -26,7 +26,7 @@ public:
   NodeRouter(
     const ModelBase* parent, 
     const std::string& name,
-    const NodeAddr& addr
+    const Coord& coord
   );
   ~NodeRouter();
 

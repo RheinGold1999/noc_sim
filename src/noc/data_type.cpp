@@ -8,7 +8,7 @@
 // NodeAddr
 // -----------------------------------------------------------------------------
 
-NodeAddr::NodeAddr(int addr0, int addr1, int addr2, int addr3)
+NodeAddr::NodeAddr(int addr3, int addr2, int addr1, int addr0)
   : m_addr({addr0, addr1, addr2, addr3})
 {}
 

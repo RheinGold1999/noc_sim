@@ -6,10 +6,10 @@
 NodeRouter::NodeRouter(
   const ModelBase* parent, 
   const std::string& name,
-  const NodeAddr& addr
+  const Coord& coord
 )
   : ModuleBase(parent, name),
-    m_coord(addr)
+    m_coord(coord)
 {
   inj_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
   eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
@@ -41,6 +41,8 @@ NodeRouter::NodeRouter(
   }
 
   m_inflight_pkts.clear();
+
+  INFO("NodeRouter {} is created: {}", base_name(), m_coord.to_str());
 }
 
 NodeRouter::~NodeRouter()

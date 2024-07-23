@@ -53,6 +53,7 @@ BridgeRouter::BridgeRouter(
     m_loc_arb_flits[i] = nullptr;
     m_glb_arb_flits[i] = nullptr;
   }
+  INFO("BridgeRouter {} is created: {}", base_name(), m_addr.to_str());
 }
 
 BridgeRouter::~BridgeRouter()

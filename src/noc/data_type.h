@@ -23,7 +23,7 @@ public:
   static const int MASKED = -1;   // used by BridgeRouter
 
 public:
-  NodeAddr(int addr0 = 0, int addr1 = 0, int addr2 = 0, int addr3 = 0);
+  NodeAddr(int addr3 = 0, int addr2 = 0, int addr1 = 0, int addr0 = 0);
 
   void set(int lvl, int val);
   int get(int lvl) const;
