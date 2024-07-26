@@ -38,6 +38,7 @@ public:
   bool is_glb2loc(const Flit* flit);
 
   void check_addr(const NodeAddr& addr);
+  NodeAddr get_addr() const;
 
 private:
   FIFO<Flit*>** m_loc2glb_que;

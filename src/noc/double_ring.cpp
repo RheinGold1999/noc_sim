@@ -6,8 +6,8 @@
 #include "config/noc_config.h"
 #include "log/logger.h"
 
-DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name)
-  : ModuleBase(parent, name)
+DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name) :
+  ModuleBase(parent, name)
 {
   m_node_router_num = NocConfig::network_lvl_0_num * 2;
   m_bridge_router_num = 2;
@@ -33,8 +33,13 @@ DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name)
   }
 
   for (int i = 0; i < m_link_num; ++i) {
-
+    os.clear();
+    os << "link_" << i;
+    m_links[i] = new Link(this, os.str());
   }
+
+  // connect all the nodes and the bridges by links
+  
 }
 
 DoubleRing::~DoubleRing()

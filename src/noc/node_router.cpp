@@ -42,7 +42,7 @@ NodeRouter::NodeRouter(
 
   m_inflight_pkts.clear();
 
-  INFO("NodeRouter {} is created: {}", base_name(), m_coord.to_str());
+  INFO("NodeRouter {} is created: {}.", base_name(), m_coord.to_str());
 }
 
 NodeRouter::~NodeRouter()
@@ -134,5 +134,11 @@ NodeRouter::receive_pkt(Packet* pkt)
   }
   m_inflight_pkts.erase(pkt);
   PacketManager::release(pkt);
+}
+
+NodeAddr
+NodeRouter::get_addr() const
+{
+  return m_coord.get_addr();
 }
 

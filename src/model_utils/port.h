@@ -56,6 +56,11 @@ public:
     port_out.set_bound();
   }
 
+  void bind(StreamPortOut<T>* port_out)
+  {
+    bind(*port_out);
+  }
+
   bool can_read()
   {
     if (get_stage() == CycStage::TRANSFER && m_port_out->m_vld) {
@@ -96,6 +101,11 @@ public:
     set_bound();
     port_in.m_port_out = this;
     port_in.set_bound();
+  }
+
+  void bind(StreamPortIn<T>* port_in)
+  {
+    bind(*port_in);
   }
 
   bool can_write()
@@ -145,6 +155,11 @@ public:
     port_out.set_bound();
   }
 
+  void bind(SignalPortOut<T>* port_out)
+  {
+    bind(*port_out);
+  }
+
   T read()
   {
     ASSERT(get_stage() == CycStage::TRANSFER);
@@ -175,6 +190,11 @@ public:
     set_bound();
     port_in.m_port_out = this;
     port_in.set_bound();
+  }
+
+  void bind(SignalPortIn<T>* port_in)
+  {
+    bind(*port_in);
   }
 
   void write(const T& data)

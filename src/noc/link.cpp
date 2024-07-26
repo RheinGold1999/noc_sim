@@ -1,4 +1,6 @@
 #include "noc/link.h"
+#include "noc/node_router.h"
+#include "noc/bridge_router.h"
 #include "model_utils/port.h"
 #include "config/noc_config.h"
 #include "log/logger.h"
@@ -22,6 +24,8 @@ Link::Link(const ModelBase* parent, const std::string& name)
     link_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
     m_pipeline_regs[i] = nullptr;
+
+    INFO("Link {} is created.", base_name());
   }
 }
 
@@ -65,3 +69,80 @@ Link::update()
     }
   }
 }
+
+void
+Link::connect(NodeRouter* up, NodeRouter* dn)
+{
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (i % 2 == 0) {
+      // clockwise bind
+      up->inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(dn->eje_i[i]);
+    } else {
+      // anti-clockwise bind
+      dn->inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(up->eje_i[i]);
+    }
+  }
+  m_addr_up = up->get_addr();
+  m_addr_dn = dn->get_addr();
+  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+}
+
+void
+Link::connect(BridgeRouter* up, BridgeRouter* dn)
+{
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (i % 2 == 0) {
+      // clockwise bind
+      up->glb_inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(dn->glb_eje_i[i]);
+    } else {
+      // anti-clockwise bind
+      dn->glb_inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(up->glb_eje_i[i]);
+    }
+  }
+  m_addr_up = up->get_addr();
+  m_addr_dn = dn->get_addr();
+  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+}
+
+void
+Link::connect(NodeRouter* up, BridgeRouter* dn)
+{
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (i % 2 == 0) {
+      // clockwise bind
+      up->inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(dn->loc_eje_i[i]);
+    } else {
+      // anti-clockwise bind
+      dn->loc_inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(up->eje_i[i]);
+    }
+  }
+  m_addr_up = up->get_addr();
+  m_addr_dn = dn->get_addr();
+  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+}
+
+void
+Link::connect(BridgeRouter* up, NodeRouter* dn)
+{
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (i % 2 == 0) {
+      // clockwise bind
+      up->loc_inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(dn->eje_i[i]);
+    } else {
+      // anti-clockwise bind
+      dn->inj_o[i]->bind(link_i[i]);
+      link_o[i]->bind(up->loc_eje_i[i]);
+    }
+  }
+  m_addr_up = up->get_addr();
+  m_addr_dn = dn->get_addr();
+  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+}
+

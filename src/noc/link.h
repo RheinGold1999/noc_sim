@@ -10,6 +10,10 @@ class StreamPortOut;
 template <typename T>
 class StreamPortIn;
 
+class NodeRouter;
+
+class BridgeRouter;
+
 class Link
   : public ModuleBase
 {
@@ -25,8 +29,15 @@ public:
   void process() override;
   void update() override;
 
+  void connect(NodeRouter* up, NodeRouter* dn);
+  void connect(BridgeRouter* up, BridgeRouter* dn);
+  void connect(NodeRouter* up, BridgeRouter* dn);
+  void connect(BridgeRouter* up, NodeRouter* dn);
+
 private:
   Flit** m_pipeline_regs;
+  NodeAddr m_addr_up;  // in clockwise direction
+  NodeAddr m_addr_dn;  // in clockwise direction
 };
 
 #endif /* __LINK_H__ */

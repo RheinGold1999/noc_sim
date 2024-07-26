@@ -36,6 +36,7 @@ public:
 
   bool is_this_dst(const Flit* flit) const;
   void receive_pkt(Packet* pkt);
+  NodeAddr get_addr() const;
 
 private:
   FIFO<Flit*>** m_inj_que;

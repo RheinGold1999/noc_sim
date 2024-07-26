@@ -7,9 +7,9 @@ BridgeRouter::BridgeRouter(
   const ModelBase* parent,
   const std::string& name,
   const NodeAddr& addr
-)
-  : ModuleBase(parent, name),
-    m_addr(addr)
+) :
+  ModuleBase(parent, name),
+  m_addr(addr)
 {
   check_addr(addr);
 
@@ -175,4 +175,10 @@ BridgeRouter::check_addr(const NodeAddr& addr)
       found_non_mask = true;
     }
   }
+}
+
+NodeAddr
+BridgeRouter::get_addr() const
+{
+  return m_addr;
 }
