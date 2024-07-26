@@ -62,7 +62,7 @@ NodeAddr::to_str() const
   os << "NodeAddr: ";
   for (int i = MAX_LEVEL - 1; i >= 0; --i) {
     if (get(i) == MASKED) {
-      os << "X";
+      os << "x";
     } else {
       os << get(i);
     }

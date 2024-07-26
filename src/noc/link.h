@@ -14,6 +14,8 @@ class NodeRouter;
 
 class BridgeRouter;
 
+class Router;
+
 class Link
   : public ModuleBase
 {
@@ -33,6 +35,7 @@ public:
   void connect(BridgeRouter* up, BridgeRouter* dn);
   void connect(NodeRouter* up, BridgeRouter* dn);
   void connect(BridgeRouter* up, NodeRouter* dn);
+  void connect(Router* up, Router* dn);
 
 private:
   Flit** m_pipeline_regs;

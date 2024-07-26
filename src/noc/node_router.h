@@ -3,7 +3,7 @@
 
 #include <set>
 
-#include "model_utils/module_base.h"
+#include "noc/router.h"
 #include "noc/data_type.h"
 
 template <typename T>
@@ -16,7 +16,7 @@ template <typename T>
 class FIFO;
 
 class NodeRouter
-  : public ModuleBase
+  : public Router
 {
 public:
   StreamPortOut<Flit*>** inj_o;
@@ -36,7 +36,7 @@ public:
 
   bool is_this_dst(const Flit* flit) const;
   void receive_pkt(Packet* pkt);
-  NodeAddr get_addr() const;
+  NodeAddr get_addr() const override;
 
 private:
   FIFO<Flit*>** m_inj_que;

@@ -7,6 +7,7 @@
 #include "model_utils/simulator.h"
 #include "log/logger.h"
 #include "config/config_manager.h"
+#include "noc/double_ring.h"
 
 
 class Producer
@@ -72,21 +73,33 @@ int main(int argc, char** argv)
   ConfigManager::parse_args(argc, argv);
   ConfigManager::print_args();
 
-  Top* top = Top::instance();
-  Producer producer(top, "producer");
-  Consumer consumer(top, "consumer");
-
+  // -------------------------------------------------------
+  // Test logger
+  // -------------------------------------------------------
   _TRACE("0");
   _DEBUG("1");
   _INFO("2");
   _WARN("3");
   _ERROR("4");
   _CRITICAL("5");
+  
+  Top* top = Top::instance();
 
-  producer.out.bind(consumer.in);
-  consumer.in.bind(producer.out);
+  // -------------------------------------------------------
+  // Demo
+  // -------------------------------------------------------
+  // Producer producer(top, "producer");
+  // Consumer consumer(top, "consumer");
 
-  Simulator::run(100);
+  // producer.out.bind(consumer.in);
+  // consumer.in.bind(producer.out);
+
+  // -------------------------------------------------------
+  // Double Ring
+  // -------------------------------------------------------
+  DoubleRing double_ring(top, "double_ring");
+
+  Simulator::run(10);
   
   return 0;
 }

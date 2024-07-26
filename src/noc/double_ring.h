@@ -1,10 +1,11 @@
 #ifndef __DOUBLE_RING_H__
 #define __DOUBLE_RING_H__
 
+#include <vector>
+
 #include "model_utils/module_base.h"
 
-class NodeRouter;
-class BridgeRouter;
+class Router;
 class Link;
 
 class DoubleRing
@@ -19,13 +20,14 @@ public:
   void update() override;
 
 public:
-  NodeRouter** m_node_routers;
-  BridgeRouter** m_bridge_routers;
-  Link** m_links;
+  Router** m_routers;
+  Link** m_node_links;
+  Link** m_bridge_links;
 
-  int m_node_router_num;
-  int m_bridge_router_num;
+  int m_node_num;
+  int m_bridge_num;
   int m_link_num;
+  std::vector<int> m_bridge_idx_vec;
 };
 
 #endif /* __DOUBLE_RING_H__ */

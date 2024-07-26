@@ -1,7 +1,7 @@
 #ifndef __BRIDGE_ROUTER_H__
 #define __BRIDGE_ROUTER_H__
 
-#include "model_utils/module_base.h"
+#include "noc/router.h"
 #include "noc/data_type.h"
 
 template <typename T>
@@ -13,7 +13,8 @@ class StreamPortIn;
 template <typename T>
 class FIFO;
 
-class BridgeRouter : public ModuleBase
+class BridgeRouter :
+  public Router
 {
 public:
   StreamPortOut<Flit*>** loc_inj_o;
@@ -26,7 +27,7 @@ public:
   BridgeRouter(
     const ModelBase* parent,
     const std::string& name,
-    const NodeAddr& addr
+    const Coord& coord
   );
   ~BridgeRouter();
 
@@ -38,7 +39,8 @@ public:
   bool is_glb2loc(const Flit* flit);
 
   void check_addr(const NodeAddr& addr);
-  NodeAddr get_addr() const;
+  NodeAddr get_addr() const override;
+  void set_addr(const NodeAddr& addr);
 
 private:
   FIFO<Flit*>** m_loc2glb_que;
@@ -57,6 +59,10 @@ private:
    *       3.x.x.
    */
   NodeAddr m_addr;
+  /** @brief Only for the convenience during the network connection.
+   *         The real addr for routing is m_addr;
+   */
+  Coord m_coord;  // only for the convenience in netword connection
 };
 
 #endif /* __BRIDGE_ROUTER_H__ */

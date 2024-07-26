@@ -8,9 +8,11 @@ NodeRouter::NodeRouter(
   const std::string& name,
   const Coord& coord
 )
-  : ModuleBase(parent, name),
+  : Router(parent, name),
     m_coord(coord)
 {
+  ASSERT(NocConfig::ring_width % 2 == 0);
+
   inj_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
   eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
 
@@ -21,19 +23,19 @@ NodeRouter::NodeRouter(
 
   std::ostringstream os;
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    os.clear();
+    os.str("");
     os << "inj_o_" << i;
     inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "eje_i_" << i;
     eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "inj_que_" << i;
     m_inj_que[i] = new FIFO<Flit*>(this, os.str(), NocConfig::node_inj_que_depth);
 
-    os.clear();
+    os.str("");
     os << "eje_que_" << i;
     m_eje_rob[i] = new FIFO<Flit*>(this, os.str(), NocConfig::node_eje_que_depth);
 
@@ -42,7 +44,7 @@ NodeRouter::NodeRouter(
 
   m_inflight_pkts.clear();
 
-  INFO("NodeRouter {} is created: {}.", base_name(), m_coord.to_str());
+  INFO("created: {}", m_coord.to_str());
 }
 
 NodeRouter::~NodeRouter()

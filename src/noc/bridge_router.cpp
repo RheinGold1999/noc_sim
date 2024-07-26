@@ -6,12 +6,12 @@
 BridgeRouter::BridgeRouter(
   const ModelBase* parent,
   const std::string& name,
-  const NodeAddr& addr
+  const Coord& coord
 ) :
-  ModuleBase(parent, name),
-  m_addr(addr)
+  Router(parent, name),
+  m_coord(coord)
 {
-  check_addr(addr);
+  ASSERT(NocConfig::ring_width % 2 == 0);
 
   loc_inj_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
   loc_eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
@@ -26,34 +26,34 @@ BridgeRouter::BridgeRouter(
 
   std::ostringstream os;
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    os.clear();
+    os.str("");
     os << "loc_inj_o_" << i;
     loc_inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "loc_eje_i_" << i;
     loc_eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "glb_inj_o_" << i;
     glb_inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "glb_eje_i_" << i;
     glb_eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "loc2glb_que_" << i;
     m_loc2glb_que[i] = new FIFO<Flit*>(this, os.str(), NocConfig::bridge_inj_que_depth);
 
-    os.clear();
+    os.str("");
     os << "glb2loc_que_" << i;
     m_glb2loc_que[i] = new FIFO<Flit*>(this, os.str(), NocConfig::bridge_inj_que_depth);
 
     m_loc_arb_flits[i] = nullptr;
     m_glb_arb_flits[i] = nullptr;
   }
-  INFO("BridgeRouter {} is created: {}", base_name(), m_addr.to_str());
+  INFO("created: {}", m_coord.to_str());
 }
 
 BridgeRouter::~BridgeRouter()
@@ -181,4 +181,12 @@ NodeAddr
 BridgeRouter::get_addr() const
 {
   return m_addr;
+}
+
+void
+BridgeRouter::set_addr(const NodeAddr& addr)
+{
+  check_addr(addr);
+  m_addr = addr;
+  INFO("set addr to {}", m_addr.to_str());
 }

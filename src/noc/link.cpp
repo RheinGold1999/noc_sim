@@ -8,6 +8,8 @@
 Link::Link(const ModelBase* parent, const std::string& name)
   : ModuleBase(parent, name)
 {
+  ASSERT(NocConfig::ring_width % 2 == 0);
+
   link_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
   link_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
 
@@ -15,18 +17,18 @@ Link::Link(const ModelBase* parent, const std::string& name)
 
   std::ostringstream os;
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    os.clear();
+    os.str("");
     os << "link_o_" << i;
     link_o[i] = new StreamPortOut<Flit*>(this, os.str());
 
-    os.clear();
+    os.str("");
     os << "link_i_" << i;
     link_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
     m_pipeline_regs[i] = nullptr;
-
-    INFO("Link {} is created.", base_name());
   }
+
+  INFO("created");
 }
 
 Link::~Link()
@@ -84,9 +86,6 @@ Link::connect(NodeRouter* up, NodeRouter* dn)
       link_o[i]->bind(up->eje_i[i]);
     }
   }
-  m_addr_up = up->get_addr();
-  m_addr_dn = dn->get_addr();
-  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
 }
 
 void
@@ -103,9 +102,6 @@ Link::connect(BridgeRouter* up, BridgeRouter* dn)
       link_o[i]->bind(up->glb_eje_i[i]);
     }
   }
-  m_addr_up = up->get_addr();
-  m_addr_dn = dn->get_addr();
-  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
 }
 
 void
@@ -122,9 +118,6 @@ Link::connect(NodeRouter* up, BridgeRouter* dn)
       link_o[i]->bind(up->eje_i[i]);
     }
   }
-  m_addr_up = up->get_addr();
-  m_addr_dn = dn->get_addr();
-  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
 }
 
 void
@@ -141,8 +134,32 @@ Link::connect(BridgeRouter* up, NodeRouter* dn)
       link_o[i]->bind(up->loc_eje_i[i]);
     }
   }
+}
+
+
+void
+Link::connect(Router* up, Router* dn)
+{
+  NodeRouter* node_up = dynamic_cast<NodeRouter*>(up);
+  NodeRouter* node_dn = dynamic_cast<NodeRouter*>(dn);
+  BridgeRouter* bridge_up = dynamic_cast<BridgeRouter*>(up);
+  BridgeRouter* bridge_dn = dynamic_cast<BridgeRouter*>(dn);
+
   m_addr_up = up->get_addr();
   m_addr_dn = dn->get_addr();
   INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+
+  if (node_up && node_dn) {
+    connect(node_up, node_dn);
+  } else if (bridge_up && bridge_dn) {
+    connect(bridge_up, bridge_dn);
+  } else if (bridge_up && node_dn) {
+    connect(bridge_up, node_dn);
+  } else if (node_up && bridge_dn) {
+    connect(node_up, bridge_dn);
+  } else {
+    ERROR("wrong router type!!!");
+    abort();
+  }
 }
 
