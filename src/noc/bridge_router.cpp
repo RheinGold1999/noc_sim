@@ -82,9 +82,31 @@ void
 BridgeRouter::transfer()
 {
   // ---------------------------------------------------------------------------
+  // Swap rule
+  // ---------------------------------------------------------------------------
+  bool swaped[NocConfig::ring_width.get_val()];
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    Flit* loc_flit = 
+      loc_eje_i[i]->can_read() ? loc_eje_i[i]->read() : nullptr;
+    Flit* glb_flit = 
+      glb_eje_i[i]->can_read() ? glb_eje_i[i]->read() : nullptr;
+    
+    if (loc_flit && glb_flit && is_loc2glb(loc_flit) && is_glb2loc(glb_flit)) {
+      m_loc_arb_flits[i] = glb_flit;
+      m_glb_arb_flits[i] = loc_flit;
+      swaped[i] = true;
+    } else {
+      swaped[i] = false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Local to Global
   // ---------------------------------------------------------------------------
   for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (swaped[i]) {
+      continue;
+    }
     if (loc_eje_i[i]->can_read()) {
       Flit* flit = loc_eje_i[i]->read();
       if (is_loc2glb(flit)) {
@@ -105,6 +127,9 @@ BridgeRouter::transfer()
   // Global to Local
   // ---------------------------------------------------------------------------
   for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (swaped[i]) {
+      continue;
+    }
     if (glb_eje_i[i]->can_read()) {
       Flit* flit = glb_eje_i[i]->read();
       if (is_glb2loc(flit)) {
@@ -120,8 +145,6 @@ BridgeRouter::transfer()
       }
     }
   }
-
-  // TODO: add `Swap Rule`
 }
 
 void
