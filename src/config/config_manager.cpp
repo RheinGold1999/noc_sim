@@ -20,7 +20,8 @@ ConfigManager::parse_args(int argc, char** argv)
     param_map_type* param_map_ptr = nullptr;
     std::string opt = argv[i];
     std::string val = argv[i + 1];
-    if (opt.find("config") != std::string::npos) {
+    if ( opt.find("-config.") != std::string::npos ||
+         opt.find("-cfg.") != std::string::npos ) {
       bool is_found_in_cfg_map = false;
       for (auto pair : cfg_map) {
         if (opt.find(pair.first) != std::string::npos) {
@@ -45,7 +46,7 @@ ConfigManager::update_param(
   const std::string& val
 )
 {
-  static std::regex name_pat("-{1,2}config\\S*\\.(\\w+)");
+  static std::regex name_pat("-{1,2}(?:cfg|config)\\S*\\.(\\w+)");
   static std::smatch name_matchs;
   bool name_matched = std::regex_match(opt, name_matchs, name_pat);
   _ASSERT(name_matched);

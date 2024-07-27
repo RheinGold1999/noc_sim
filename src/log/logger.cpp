@@ -6,22 +6,11 @@
 
 namespace fs = std::filesystem;
 
-Logger::Logger() :
-  m_model(nullptr),
-  m_spdlogger(nullptr)
-{}
-
-Logger::Logger(const ModelBase* model) :
-  m_model(model),
-  m_spdlogger(nullptr)
-{}
-
-Logger::Logger(const ModelBase* model, spd_logger_t spdlogger) :
-  m_model(model),
-  m_spdlogger(spdlogger)
-{}
-
-Logger::Logger(const ModelBase* model, spd_logger_t spdlogger, const fs::path& path) :
+Logger::Logger(
+  const ModelBase* model, 
+  spd_logger_t spdlogger, 
+  const fs::path& path
+) :
   m_model(model),
   m_spdlogger(spdlogger),
   m_path(path)

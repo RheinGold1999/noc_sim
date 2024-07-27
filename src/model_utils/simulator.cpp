@@ -85,6 +85,6 @@ void
 Simulator::update_logger_level()
 {
   Top::logger->set_level((int)GlobalConfig::top_dbg_lvl);
-  _INFO("Top logger level is: {}", (int)Top::logger->m_spdlogger->level());
+  _CRITICAL("Top logger level is: {}", (int)Top::logger->m_spdlogger->level());
 }
 
