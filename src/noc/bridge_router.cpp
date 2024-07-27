@@ -150,8 +150,21 @@ BridgeRouter::transfer()
 void
 BridgeRouter::process()
 {
-  // TODO: implement the crossbar logic here
+  // ---------------------------------------------------------------------------
+  // Strategy 1: Direct Link
+  //   - m_glb2loc_que[i] <-> loc_inj_o[i]
+  //   - m_loc2glb_que[i] <-> glb_inj_o[i]
+  // ---------------------------------------------------------------------------
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (m_loc_arb_flits[i] == nullptr && m_glb2loc_que[i]->can_read()) {
+      m_loc_arb_flits[i] = m_glb2loc_que[i]->read();
+    }
+    if (m_glb_arb_flits[i] == nullptr && m_loc2glb_que[i]->can_read()) {
+      m_glb_arb_flits[i] = m_loc2glb_que[i]->read();
+    }
+  }
 
+  // TODO: try other strategies
 }
 
 void
