@@ -2,6 +2,8 @@
 #define __LOGGER_H__
 
 #include <sstream>
+#include <filesystem>
+#include <list>
 
 #include "spdlog/spdlog.h"
 
@@ -21,12 +23,13 @@ class Logger
   friend class ModelBase;
   friend class Simulator;
 
-  typedef std::shared_ptr<spdlog::logger> logger_t;
+  typedef std::shared_ptr<spdlog::logger> spd_logger_t;
 
 public:
   Logger();
   Logger(const ModelBase* model);
-  Logger(const ModelBase* model, logger_t logger);
+  Logger(const ModelBase* model, spd_logger_t logger);
+  Logger(const ModelBase* model, spd_logger_t logger, const std::filesystem::path& path);
 
   void set_level(int lvl) const;
 
@@ -111,11 +114,13 @@ public:
 
 private:
   const ModelBase* m_model;
-  mutable logger_t m_spdlogger;
+  mutable spd_logger_t m_spdlogger;
+  std::filesystem::path m_path;
   
 private:
   static const Logger* create_logger(const ModelBase* model);
   static const Logger* inherit_from(const ModelBase* parent, const ModelBase* child);
+  static std::list<Logger*> s_logger_list;
 };
 
 // -----------------------------------------------------------------------------
