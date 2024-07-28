@@ -1,7 +1,7 @@
 #ifndef __DATA_TYPE_H__
 #define __DATA_TYPE_H__
 
-#include "noc/common.h"
+// #include "noc/common.h"
 
 #include <list>
 #include <set>
@@ -75,10 +75,27 @@ class Packet
 {
   friend class PacketManager;
 
+  enum class PktType : int
+  {
+    UNKNOWN,
+    READ_REQ,
+    READ_RSP,
+    WRITE_REQ,
+    WRITE_RSP,
+  };
+
+  enum class Parity: int
+  {
+    CW = 0,
+    ACW = 1,
+    DONT_CARE = -1,
+  };
+
 public:
   Coord m_src;
   Coord m_dst;
   uint64_t m_id;
+  PktType m_type;
 
   int m_total_flits_num;
   int m_arrived_flits_num;
@@ -93,6 +110,7 @@ private:
   Packet(
     const Coord& src, 
     const Coord& dst, 
+    PktType type,
     int flits_num, 
     uint64_t creation_time,
     Parity parity = Parity::DONT_CARE
@@ -101,6 +119,7 @@ private:
   void init(
     const Coord& src, 
     const Coord& dst, 
+    PktType type,
     int flits_num, 
     uint64_t creation_time,
     Parity parity = Parity::DONT_CARE
@@ -113,9 +132,10 @@ public:
   static Packet* acquire(
     const Coord& src,
     const Coord& dst,
+    Packet::PktType type,
     int flits_num,
     uint64_t creation_time,
-    Parity parity = Parity::DONT_CARE
+    Packet::Parity parity = Packet::Parity::DONT_CARE
   );
   static void release(Packet* pkt);
   static void destory();

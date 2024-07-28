@@ -192,14 +192,16 @@ Coord::to_str() const
 
 Packet::Packet(
   const Coord& src, 
-  const Coord& dst, 
-  int flits_num, 
+  const Coord& dst,
+  PktType type, 
+  int flits_num,
   uint64_t creation_time,
   Parity parity
 ) 
   : m_src(src)
   , m_dst(dst)
   , m_id(PacketManager::alloc_pkt_id())
+  , m_type(type)
   , m_total_flits_num(flits_num)
   , m_arrived_flits_num(0)
   , m_parity(parity)
@@ -218,6 +220,7 @@ void
 Packet::init(
   const Coord& src, 
   const Coord& dst, 
+  PktType type,
   int flits_num, 
   uint64_t creation_time,
   Parity parity
@@ -226,6 +229,7 @@ Packet::init(
   m_src = src;
   m_dst = dst;
   m_id = PacketManager::alloc_pkt_id();
+  m_type = type;
 
   m_total_flits_num = flits_num;
   m_arrived_flits_num = 0;
@@ -261,19 +265,20 @@ Packet*
 PacketManager::acquire(
   const Coord& src,
   const Coord& dst,
+  Packet::PktType type,
   int flits_num,
   uint64_t creation_time,
-  Parity parity
+  Packet::Parity parity
 )
 {
   Packet* pkt = nullptr;
   if (s_pool.empty()) {
-    pkt = new Packet(src, dst, flits_num, creation_time, parity);
+    pkt = new Packet(src, dst, type, flits_num, creation_time, parity);
     s_newed_pkt_cnt++;
   } else {
     pkt = s_pool.front();
     s_pool.pop_front();
-    pkt->init(src, dst, flits_num, creation_time, parity);
+    pkt->init(src, dst, type, flits_num, creation_time, parity);
   }
   s_inflights.insert(pkt);
   return pkt;

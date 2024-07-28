@@ -8,4 +8,5 @@ enum class Parity : int
   DONT_CARE = -1,
 };
 
+
 #endif /* __COMMON_H__ */
