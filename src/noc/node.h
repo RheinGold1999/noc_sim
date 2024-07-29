@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 
 #include "model_utils/module_base.h"
 // #include "model_utils/port.h"
@@ -33,10 +34,13 @@ private:
   void gen_req_pkt();
   void gen_rsp_pkt();
 
+  void rcv_pkt(Packet* pkt);
+
 private:
-  std::list<Packet*> m_issue_que;     // packets waiting to be issued to NodeRouter
-  // std::list<Packet*> m_inflight_que;  // packets been issed and waiting for response
-  std::map<Packet*, std::list<Flit*>>  m_inflight_map;  // also as ROB
+  std::list<Packet*> m_req_que;     // packets waiting to be issued to NodeRouter
+  std::list<Packet*> m_rsp_que;
+  std::map<Packet*, std::list<Flit*>>  m_rob_map;  // can also be seen as a ROB
+  std::set<Packet*> m_inflight_req_set;
 };
 
 #endif /* __TRACE_SENDER_H__ */

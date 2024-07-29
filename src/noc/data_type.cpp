@@ -196,7 +196,8 @@ Packet::Packet(
   PktType type, 
   int flits_num,
   uint64_t creation_time,
-  Parity parity
+  Parity parity,
+  Packet* req_pkt
 ) 
   : m_src(src)
   , m_dst(dst)
@@ -207,6 +208,8 @@ Packet::Packet(
   , m_parity(parity)
   , m_creation_time(creation_time)
   , m_injection_time(UINT64_MAX)
+  , m_rsp_flit_num(1)
+  , m_req_pkt(req_pkt)
 {
   m_flits_list.clear();
   for (int i = 0; i < m_total_flits_num; ++i) {
@@ -223,7 +226,8 @@ Packet::init(
   PktType type,
   int flits_num, 
   uint64_t creation_time,
-  Parity parity
+  Parity parity,
+  Packet* req_pkt
 )
 {
   m_src = src;
@@ -238,6 +242,9 @@ Packet::init(
   m_creation_time = creation_time;
   m_injection_time = UINT16_MAX;
 
+  m_rsp_flit_num = 1;
+  m_req_pkt = req_pkt;
+
   _ASSERT(m_flits_list.empty());
   for (int i = 0; i < m_total_flits_num; ++i) {
     m_flits_list.push_back(FlitManager::acquire(this, i));
@@ -246,6 +253,41 @@ Packet::init(
   m_flits_list.back()->m_is_tail = true;
 }
 
+int
+Packet::get_rsp_flit_num() const
+{
+  return m_rsp_flit_num;
+}
+
+void
+Packet::set_rsp_flit_num(int num)
+{
+  m_rsp_flit_num = num;
+}
+
+Packet::PktType
+Packet::get_type() const
+{
+  return m_type;
+}
+
+Coord
+Packet::get_src() const
+{
+  return m_src;
+}
+
+Coord
+Packet::get_dst() const
+{
+  return m_dst;
+}
+
+Packet*
+Packet::get_req_pkt() const
+{
+  return m_req_pkt;
+}
 
 // -----------------------------------------------------------------------------
 // Packet Manager
@@ -268,17 +310,18 @@ PacketManager::acquire(
   Packet::PktType type,
   int flits_num,
   uint64_t creation_time,
-  Packet::Parity parity
+  Packet::Parity parity,
+  Packet* req_pkt
 )
 {
   Packet* pkt = nullptr;
   if (s_pool.empty()) {
-    pkt = new Packet(src, dst, type, flits_num, creation_time, parity);
+    pkt = new Packet(src, dst, type, flits_num, creation_time, parity, req_pkt);
     s_newed_pkt_cnt++;
   } else {
     pkt = s_pool.front();
     s_pool.pop_front();
-    pkt->init(src, dst, type, flits_num, creation_time, parity);
+    pkt->init(src, dst, type, flits_num, creation_time, parity, req_pkt);
   }
   s_inflights.insert(pkt);
   return pkt;
@@ -364,15 +407,20 @@ Flit::init(Packet* owner, int id)
 Coord
 Flit::get_dst() const
 {
-  return m_owner->m_dst;
+  return m_owner->get_dst();
 }
 
 Coord
 Flit::get_src() const
 {
-  return m_owner->m_src;
+  return m_owner->get_src();
 }
 
+Packet*
+Flit::get_pkt()
+{
+  return m_owner;
+}
 
 // -----------------------------------------------------------------------------
 // Flit Manager
