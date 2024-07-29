@@ -35,12 +35,11 @@ public:
   void update() override;
 
   bool is_this_dst(const Flit* flit) const;
-  void receive_pkt(Packet* pkt);
   NodeAddr get_addr() const override;
 
 private:
   FIFO<Flit*>** m_inj_que;
-  FIFO<Flit*>** m_eje_rob;
+  FIFO<Flit*>** m_eje_que;
   Coord m_coord;
   Flit** m_arb_flits;
 

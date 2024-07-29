@@ -17,7 +17,7 @@ NodeRouter::NodeRouter(
   eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
 
   m_inj_que = new FIFO<Flit*>* [NocConfig::ring_width];
-  m_eje_rob = new FIFO<Flit*>* [NocConfig::ring_width];
+  m_eje_que = new FIFO<Flit*>* [NocConfig::ring_width];
 
   m_arb_flits = new Flit* [NocConfig::ring_width];
 
@@ -37,7 +37,7 @@ NodeRouter::NodeRouter(
 
     os.str("");
     os << "eje_que_" << i;
-    m_eje_rob[i] = new FIFO<Flit*>(this, os.str(), NocConfig::node_eje_que_depth);
+    m_eje_que[i] = new FIFO<Flit*>(this, os.str(), NocConfig::node_eje_que_depth);
 
     m_arb_flits[i] = nullptr;
   }
@@ -53,13 +53,13 @@ NodeRouter::~NodeRouter()
     delete inj_o[i];
     delete eje_i[i];
     delete m_inj_que[i];
-    delete m_eje_rob[i];
+    delete m_eje_que[i];
   }
 
   delete [] inj_o;
   delete [] eje_i;
   delete [] m_inj_que;
-  delete [] m_eje_rob;
+  delete [] m_eje_que;
 
   delete [] m_arb_flits;
 }
@@ -81,15 +81,11 @@ NodeRouter::transfer()
     if (eje_i[i]->can_read()) {
       Flit* flit = eje_i[i]->read();
       if (is_this_dst(flit)) {
-        if (m_eje_rob[i]->can_write()) {
-          m_eje_rob[i]->write(flit);
+        if (m_eje_que[i]->can_write()) {
+          m_eje_que[i]->write(flit);
           flit->m_owner->m_arrived_flits_num++;
-          if (flit->m_is_tail) {
-            receive_pkt(flit->m_owner);
-          }
         } else {
           // TODO: write to retransmit buffer
-
         }
       } else {
         m_arb_flits[i] = flit;
@@ -122,20 +118,6 @@ NodeRouter::update()
       m_arb_flits[i] = nullptr;
     }
   }
-}
-
-
-void
-NodeRouter::receive_pkt(Packet* pkt)
-{
-  // remove all the related flits in ejection robs
-  for (auto flit : pkt->m_flits_list) {
-    for (int i = 0; i < NocConfig::ring_width; ++i) {
-      m_eje_rob[i]->remove(flit);
-    }
-  }
-  m_inflight_pkts.erase(pkt);
-  PacketManager::release(pkt);
 }
 
 NodeAddr
