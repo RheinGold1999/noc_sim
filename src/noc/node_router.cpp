@@ -1,4 +1,5 @@
 #include "noc/node_router.h"
+#include "noc/node.h"
 #include "model_utils/port.h"
 #include "model_utils/fifo.h"
 #include "config/noc_config.h"
@@ -16,6 +17,9 @@ NodeRouter::NodeRouter(
   inj_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
   eje_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
 
+  node_o = new StreamPortOut<Flit*>* [NocConfig::ring_width];
+  node_i = new StreamPortIn<Flit*>* [NocConfig::ring_width];
+
   m_inj_que = new FIFO<Flit*>* [NocConfig::ring_width];
   m_eje_que = new FIFO<Flit*>* [NocConfig::ring_width];
 
@@ -30,6 +34,14 @@ NodeRouter::NodeRouter(
     os.str("");
     os << "eje_i_" << i;
     eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
+
+    os.str("");
+    os << "node_o_" << i;
+    node_o[i] = new StreamPortOut<Flit*>(this, os.str());
+
+    os.str("");
+    os << "node_i_" << i;
+    node_i[i] = new StreamPortIn<Flit*>(this, os.str());
 
     os.str("");
     os << "inj_que_" << i;
@@ -75,6 +87,15 @@ NodeRouter::is_this_dst(const Flit* flit) const
 }
 
 void
+NodeRouter::connect_node(Node* node)
+{
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    node_o[i]->bind(node->flit_i[i]);
+    node_i[i]->bind(node->flit_o[i]);
+  }
+}
+
+void
 NodeRouter::transfer()
 {
   for (int i = 0; i < NocConfig::ring_width; ++i) {
@@ -90,6 +111,12 @@ NodeRouter::transfer()
       } else {
         m_arb_flits[i] = flit;
       }
+    }
+  }
+
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (node_i[i]->can_read() && m_inj_que[i]->can_write()) {
+      m_inj_que[i]->write(node_i[i]->read());
     }
   }
 }
@@ -112,10 +139,16 @@ void
 NodeRouter::update()
 {
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    assert(inj_o[i]->can_write());
+    ASSERT(inj_o[i]->can_write());
     if (m_arb_flits[i]) {
       inj_o[i]->write(m_arb_flits[i]);
       m_arb_flits[i] = nullptr;
+    }
+  }
+
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (node_o[i]->can_write() && m_eje_que[i]->can_read()) {
+      node_o[i]->write(m_eje_que[i]->read());
     }
   }
 }

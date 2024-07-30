@@ -289,6 +289,23 @@ Packet::get_req_pkt() const
   return m_req_pkt;
 }
 
+Flit* 
+Packet::pop_flit()
+{
+  Flit* flit = nullptr;
+  if (!m_flits_list.empty()) {
+    flit = m_flits_list.front();
+    m_flits_list.pop_front();
+  }
+  return flit; 
+}
+
+int
+Packet::rest_flit_num() const
+{
+  return m_flits_list.size();
+}
+
 // -----------------------------------------------------------------------------
 // Packet Manager
 // -----------------------------------------------------------------------------

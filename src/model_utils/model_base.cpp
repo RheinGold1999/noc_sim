@@ -100,7 +100,7 @@ ModelBase::get_stage() const
 void
 ModelBase::_cyc_phase_1()
 {
-  TRACE("{}", "transfer()");
+  // TRACE("{}", "transfer()");
   transfer();
   for (auto ch : m_children) {
     ch->_cyc_phase_1();
@@ -111,6 +111,7 @@ ModelBase::_cyc_phase_1()
 void
 ModelBase::_cyc_phase_2()
 {
+  // TRACE("{}", "process()");
   process();
   for (auto ch : m_children) {
     ch->_cyc_phase_2();
@@ -121,7 +122,7 @@ ModelBase::_cyc_phase_2()
 void
 ModelBase::_cyc_phase_3()
 {
-  TRACE("{}", "update()");
+  // TRACE("{}", "update()");
   update();
   for (auto ch : m_children) {
     ch->_cyc_phase_3();

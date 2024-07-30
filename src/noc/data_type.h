@@ -139,6 +139,8 @@ public:
   Coord get_src() const;
   Coord get_dst() const;
   Packet* get_req_pkt() const;
+  Flit* pop_flit();
+  int rest_flit_num() const;
 };
 
 class PacketManager

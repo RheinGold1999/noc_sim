@@ -13,6 +13,9 @@ struct NocConfig
   DECL_PARAM(int, network_lvl_2_num)
   DECL_PARAM(int, network_lvl_3_num)
 
+  DECL_PARAM(int, network_lvl_0_bridge_num)
+  DECL_PARAM(int, network_lvl_1_bridge_num)
+
   DECL_PARAM(int, ring_width)
 
   DECL_PARAM(int, node_inj_que_depth)
@@ -20,6 +23,7 @@ struct NocConfig
   DECL_PARAM(int, bridge_inj_que_depth)
   DECL_PARAM(int, bridge_eje_que_depth)
 
+  DECL_PARAM(double, node_inj_rate)
 };
 
 #endif  /* __NOC_CONFIG_H__ */

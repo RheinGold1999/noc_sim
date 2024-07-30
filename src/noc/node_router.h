@@ -15,12 +15,17 @@ class StreamPortIn;
 template <typename T>
 class FIFO;
 
+class Node;
+
 class NodeRouter
   : public Router
 {
 public:
   StreamPortOut<Flit*>** inj_o;
   StreamPortIn<Flit*>**  eje_i;
+
+  StreamPortOut<Flit*>** node_o;
+  StreamPortIn<Flit*>** node_i;
 
 public:
   NodeRouter(
@@ -36,6 +41,8 @@ public:
 
   bool is_this_dst(const Flit* flit) const;
   NodeAddr get_addr() const override;
+
+  void connect_node(Node* node);
 
 private:
   FIFO<Flit*>** m_inj_que;

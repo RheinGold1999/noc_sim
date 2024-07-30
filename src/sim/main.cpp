@@ -99,7 +99,7 @@ int main(int argc, char** argv)
   // -------------------------------------------------------
   DoubleRing double_ring(top, "double_ring");
 
-  Simulator::run(10);
+  Simulator::run(10000);
   
   return 0;
 }

@@ -1,11 +1,13 @@
 #include "noc/node.h"
+#include "noc/double_ring.h"
 #include "model_utils/port.h"
 #include "model_utils/simulator.h"
 #include "config/noc_config.h"
 #include "log/logger.h"
 
-Node::Node(const ModelBase* parent, const std::string& name) :
-  ModuleBase(parent, name)
+Node::Node(const ModelBase* parent, const std::string& name, const Coord& coord) :
+  ModuleBase(parent, name),
+  m_coord(coord)
 {
   m_req_que.clear();
   m_rsp_que.clear();
@@ -26,6 +28,8 @@ Node::Node(const ModelBase* parent, const std::string& name) :
     flit_i[i] = new StreamPortIn<Flit*>(this, os.str());
   }
 
+  m_arb_flits = new Flit* [NocConfig::ring_width];
+
   INFO("created");
 }
 
@@ -37,6 +41,8 @@ Node::~Node()
   }
   delete [] flit_o;
   delete [] flit_i;
+  
+  delete [] m_arb_flits;
 }
 
 void
@@ -58,62 +64,105 @@ Node::transfer()
       }
     }
   }
+
+  gen_req_pkt();
 }
 
 void
 Node::process()
 {
-
+  inj_arb();
 }
 
 void
 Node::update()
 {
-
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (m_arb_flits[i] && flit_o[i]->can_write()) {
+      flit_o[i]->write(m_arb_flits[i]);
+      m_arb_flits[i] = nullptr;
+    }
+  }
 }
 
 void
 Node::gen_req_pkt()
 {
-
+  int cyc_intval = 1.0 * 2 / NocConfig::node_inj_rate;
+  if (Simulator::curr_tick() % cyc_intval == 0) {
+    Packet* pkt = PacketManager::acquire(
+      m_coord,
+      DoubleRing::gen_random_dst(m_coord),
+      Packet::PktType::WRITE_REQ,
+      1,
+      Simulator::curr_tick()
+    );
+    m_req_que.emplace_back(pkt);
+  }
 }
 
 void
-Node::gen_rsp_pkt()
+Node::gen_rsp_pkt(Packet* req_pkt)
 {
-  
+  int rsp_flit_num = req_pkt->get_rsp_flit_num();
+  Packet::PktType rsp_type;
+  if (req_pkt->get_type() == Packet::PktType::READ_REQ) {
+    rsp_type = Packet::PktType::READ_RSP;
+  } else if (req_pkt->get_type() == Packet::PktType::WRITE_REQ) {
+    rsp_type = Packet::PktType::WRITE_RSP;
+  } else {
+    ERROR("Wrong req_pkt type: {}", (int)(req_pkt->get_type()));
+  }
+  Coord rsp_src = req_pkt->get_dst();
+  Coord rsp_dst = req_pkt->get_src();
+  Packet* rsp_pkt = PacketManager::acquire(
+    rsp_src,
+    rsp_dst,
+    rsp_type,
+    rsp_flit_num,
+    Simulator::curr_tick(),
+    Packet::Parity::DONT_CARE,
+    req_pkt
+  );
+  m_rsp_que.emplace_back(rsp_pkt);
+}
+
+void
+Node::inj_arb()
+{
+  static uint64_t req_rsp_rr = 0;
+  for (int i = 0; i < NocConfig::ring_width; ++i) {
+    if (m_arb_flits[i]) {
+      // The output flit_o[i] is block
+      continue;
+    }
+
+    Flit* flit = nullptr;
+    if (req_rsp_rr % 2 == 0) {
+      // req first
+      flit = get_next_flit(m_req_que);
+      if (!flit) {
+        flit = get_next_flit(m_rsp_que);
+      }
+    } else {
+      // rsp first
+      flit = get_next_flit(m_rsp_que);
+      if (!flit) {
+        flit = get_next_flit(m_req_que);
+      }
+    }
+    m_arb_flits[i] = flit;
+  }
+  req_rsp_rr++;
 }
 
 void
 Node::rcv_pkt(Packet* pkt)
 {
   switch (pkt->get_type()) {
-    case (Packet::PktType::READ_REQ): {
-      int rsp_flit_num = pkt->get_rsp_flit_num();
-      Packet* rsp_pkt = PacketManager::acquire(
-        pkt->get_dst(),
-        pkt->get_src(),
-        Packet::PktType::READ_RSP,
-        rsp_flit_num,
-        Simulator::curr_tick(),
-        Packet::Parity::DONT_CARE,
-        pkt
-      );
-      m_rsp_que.emplace_back(rsp_pkt);
-      break;
-    }
-
+    case (Packet::PktType::READ_REQ):
     case (Packet::PktType::WRITE_REQ): {
-      Packet* rsp_pkt = PacketManager::acquire(
-        pkt->get_dst(),
-        pkt->get_src(),
-        Packet::PktType::WRITE_RSP,
-        1,
-        Simulator::curr_tick(),
-        Packet::Parity::DONT_CARE,
-        pkt
-      );     
-      m_rsp_que.emplace_back(rsp_pkt);
+      gen_rsp_pkt(pkt);
       break;
     }
 
@@ -134,3 +183,18 @@ Node::rcv_pkt(Packet* pkt)
   m_rob_map.erase(pkt);
   PacketManager::release(pkt);
 }
+
+Flit*
+Node::get_next_flit(std::list<Packet*>& pkt_que)
+{
+  Flit* flit = nullptr;
+  if (!pkt_que.empty()) {
+    Packet* pkt = pkt_que.front();
+    flit = pkt->pop_flit();
+    if (pkt->rest_flit_num() == 0) {
+      pkt_que.pop_front();
+    }
+  }
+  return flit;
+}
+
