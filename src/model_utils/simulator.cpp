@@ -50,8 +50,8 @@ Simulator::simulate(uint64_t cyc)
 void
 Simulator::elaborate()
 {
-  check_ports_connection();
   update_logger_level();
+  check_ports_connection();
 }
 
 void
