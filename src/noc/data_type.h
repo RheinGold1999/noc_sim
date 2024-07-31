@@ -51,6 +51,7 @@ private:
  */
 class Coord
 {
+  friend class BridgeRouter;
 public:
   Coord(const NodeAddr& addr);
   Coord(int id);
@@ -65,6 +66,9 @@ public:
   std::string to_str() const;
 
 private:
+  void set_addr(int lvl, int val);  // invoked by BridgeRouter only
+
+private:
   NodeAddr m_addr;
   int m_id;
 };
@@ -74,7 +78,7 @@ class Flit;
 class Packet
 {
   friend class PacketManager;
-
+  friend class Flit;
 public:
   enum class PktType : int
   {
@@ -141,6 +145,8 @@ public:
   Packet* get_req_pkt() const;
   Flit* pop_flit();
   int rest_flit_num() const;
+
+  std::string to_str() const;
 };
 
 class PacketManager
@@ -171,12 +177,13 @@ class Flit
   friend class Packet;
   friend class FlitManager;
 
-public:
+private:
   Packet* m_owner;
   int m_id;
   bool m_is_head;
   bool m_is_tail;
 
+public:
   bool m_is_deflected;
   uint64_t m_deflections_cnt;
 
@@ -192,8 +199,11 @@ public:
   
   Coord get_dst() const;
   Coord get_src() const;
-
   Packet* get_pkt();
+  bool is_head() const;
+  bool is_tail() const;
+
+  std::string to_str();
 
 private:
   Flit(Packet* owner, int id);

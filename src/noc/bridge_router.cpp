@@ -92,11 +92,21 @@ BridgeRouter::transfer()
       glb_eje_i[i]->can_read() ? glb_eje_i[i]->read() : nullptr;
     
     if (loc_flit && glb_flit && is_loc2glb(loc_flit) && is_glb2loc(glb_flit)) {
+      swaped[i] = true;
       m_loc_arb_flits[i] = glb_flit;
       m_glb_arb_flits[i] = loc_flit;
-      swaped[i] = true;
+      DEBUG("ch: {}, swap loc flit to glb: {}", i, loc_flit->to_str());
+      DEBUG("ch: {}, swap glb flit to loc: {}", i, glb_flit->to_str());
     } else {
       swaped[i] = false;
+      m_loc_arb_flits[i] = loc_flit;
+      m_glb_arb_flits[i] = glb_flit;
+      if (loc_flit) {
+        DEBUG("ch: {}, rcv loc flit: {}", i, loc_flit->to_str());
+      }
+      if (glb_flit) {
+        DEBUG("ch: {}, rcv glb flit: {}", i, glb_flit->to_str());
+      }
     }
   }
 
@@ -107,18 +117,18 @@ BridgeRouter::transfer()
     if (swaped[i]) {
       continue;
     }
-    if (loc_eje_i[i]->can_read()) {
-      Flit* flit = loc_eje_i[i]->read();
-      if (is_loc2glb(flit)) {
+    if (m_loc_arb_flits[i]) {
+      Flit* loc_flit = m_loc_arb_flits[i];
+      if (is_loc2glb(loc_flit)) {
         if (m_loc2glb_que[i]->can_write()) {
-          m_loc2glb_que[i]->write(flit);
+          m_loc2glb_que[i]->write(loc_flit);
+          m_loc_arb_flits[i] = nullptr;
+          DEBUG("ch: {}, loc flit to loc2glb_que: {}", i, loc_flit->to_str());
         } else {
-          flit->m_is_deflected = true;
-          flit->m_deflections_cnt++;
-          m_loc_arb_flits[i] = flit;
+          loc_flit->m_is_deflected = true;
+          loc_flit->m_deflections_cnt++;
+          DEBUG("ch: {}, loc flit is deflected: {}", i, loc_flit->to_str());
         }
-      } else {
-        m_loc_arb_flits[i] = flit;
       }
     }
   }
@@ -130,18 +140,18 @@ BridgeRouter::transfer()
     if (swaped[i]) {
       continue;
     }
-    if (glb_eje_i[i]->can_read()) {
-      Flit* flit = glb_eje_i[i]->read();
-      if (is_glb2loc(flit)) {
+    if (m_glb_arb_flits[i]) {
+      Flit* glb_flit = m_glb_arb_flits[i];
+      if (is_glb2loc(glb_flit)) {
         if (m_glb2loc_que[i]->can_write()) {
-          m_glb2loc_que[i]->write(flit);
+          m_glb2loc_que[i]->write(glb_flit);
+          m_glb_arb_flits[i] = nullptr;
+          DEBUG("ch: {}, glb flit to glb2loc_que: {}", i, glb_flit->to_str());
         } else {
-          flit->m_is_deflected = true;
-          flit->m_deflections_cnt++;
-          m_glb_arb_flits[i] = flit;
+          glb_flit->m_is_deflected = true;
+          glb_flit->m_deflections_cnt++;
+          DEBUG("ch: {}, glb flit is deflected: {}", i, glb_flit->to_str());
         }
-      } else {
-        m_glb_arb_flits[i] = flit;
       }
     }
   }
@@ -156,30 +166,34 @@ BridgeRouter::process()
   //   - m_loc2glb_que[i] <-> glb_inj_o[i]
   // ---------------------------------------------------------------------------
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    if (m_loc_arb_flits[i] == nullptr && m_glb2loc_que[i]->can_read()) {
+    if (!m_loc_arb_flits[i] && m_glb2loc_que[i]->can_read()) {
       m_loc_arb_flits[i] = m_glb2loc_que[i]->read();
+      DEBUG("ch: {}, glb2loc_que inj: {}", i, m_loc_arb_flits[i]->to_str());
     }
-    if (m_glb_arb_flits[i] == nullptr && m_loc2glb_que[i]->can_read()) {
+    if (!m_glb_arb_flits[i] && m_loc2glb_que[i]->can_read()) {
       m_glb_arb_flits[i] = m_loc2glb_que[i]->read();
+      DEBUG("ch: {}, loc2glb_que inj: {}", i, m_glb_arb_flits[i]->to_str());
     }
   }
 
-  // TODO: try other strategies
+  // TODO: also try other strategies
 }
 
 void
 BridgeRouter::update()
 {
   for (int i = 0; i < NocConfig::ring_width; ++i) {
-    assert(loc_inj_o[i]->can_write());
+    ASSERT(loc_inj_o[i]->can_write());
     if (m_loc_arb_flits[i]) {
       loc_inj_o[i]->write(m_loc_arb_flits[i]);
+      DEBUG("ch: {}, send loc flit: {}", i, m_loc_arb_flits[i]->to_str());
       m_loc_arb_flits[i] = nullptr;
     }
 
-    assert(glb_inj_o[i]->can_write());
+    ASSERT(glb_inj_o[i]->can_write());
     if (m_glb_arb_flits[i]) {
       glb_inj_o[i]->write(m_glb_arb_flits[i]);
+      DEBUG("ch: {}, send glb flit: {}", i, m_glb_arb_flits[i]->to_str());
       m_glb_arb_flits[i] = nullptr;
     }
   }
@@ -188,13 +202,13 @@ BridgeRouter::update()
 bool
 BridgeRouter::is_loc2glb(const Flit* flit)
 {
-  return !m_addr.is_matched(flit->get_dst());
+  return !get_addr().is_matched(flit->get_dst());
 }
 
 bool
 BridgeRouter::is_glb2loc(const Flit* flit)
 {
-  return m_addr.is_matched(flit->get_dst());
+  return get_addr().is_matched(flit->get_dst());
 }
 
 void
@@ -216,13 +230,19 @@ BridgeRouter::check_addr(const NodeAddr& addr)
 NodeAddr
 BridgeRouter::get_addr() const
 {
-  return m_addr;
+  return m_coord.m_addr;
 }
 
 void
-BridgeRouter::set_addr(const NodeAddr& addr)
+BridgeRouter::set_addr(int lvl, int val)
 {
-  check_addr(addr);
-  m_addr = addr;
-  INFO("set addr to {}", m_addr.to_str());
+  m_coord.set_addr(lvl, val);
+  check_addr(m_coord.m_addr);
+  INFO("set addr to {}", get_addr().to_str());
+}
+
+Coord
+BridgeRouter::get_coord() const
+{
+  return m_coord;
 }

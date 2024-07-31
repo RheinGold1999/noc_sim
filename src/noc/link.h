@@ -39,8 +39,8 @@ public:
 
 private:
   Flit** m_pipeline_regs;
-  NodeAddr m_addr_up;  // in clockwise direction
-  NodeAddr m_addr_dn;  // in clockwise direction
+  Coord m_coord_up;  // in clockwise direction
+  Coord m_coord_dn;  // in clockwise direction
 };
 
 #endif /* __LINK_H__ */

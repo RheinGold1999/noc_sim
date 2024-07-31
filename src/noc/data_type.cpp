@@ -181,9 +181,15 @@ Coord::to_str() const
 {
   std::ostringstream os;
   os << "Coord: {id: " << m_id;
-  os << " addr: " << m_addr.to_str();
+  os << ", addr: " << m_addr.to_str();
   os << "}";
   return os.str();
+}
+
+void
+Coord::set_addr(int lvl, int val)
+{
+  m_addr.set(lvl, val);
 }
 
 // -----------------------------------------------------------------------------
@@ -304,6 +310,26 @@ int
 Packet::rest_flit_num() const
 {
   return m_flits_list.size();
+}
+
+std::string
+Packet::to_str() const
+{
+  static std::string pkt_type_str[] = {
+    "UNKNOWN", "READ_REQ", "READ_RSP", "WRITE_REQ", "WRITE_RSP"
+  };
+  std::ostringstream os;
+  os << "Packet: {" 
+    << "id: " << m_id
+    << ", src: " << m_src.get_addr().to_str()
+    << ", dst: " << m_dst.get_addr().to_str()
+    << ", type: " << pkt_type_str[(int)m_type]
+    << ", creation_time: " << m_creation_time
+    << ", flit_num: " << m_total_flits_num
+    << ", time_passed: " << (Simulator::curr_tick() - m_creation_time)
+    << "}";
+
+  return os.str();
 }
 
 // -----------------------------------------------------------------------------
@@ -437,6 +463,30 @@ Packet*
 Flit::get_pkt()
 {
   return m_owner;
+}
+
+bool
+Flit::is_head() const
+{
+  return m_is_head;
+}
+
+bool
+Flit::is_tail() const
+{
+  return m_is_tail;
+}
+
+std::string
+Flit::to_str()
+{
+  std::ostringstream os;
+  os << "Flit: {"
+    <<"id: " << m_owner->m_id << ":" << m_id << "/" << (m_owner->m_total_flits_num - 1)
+    << ", src: " << get_src().get_id()
+    << ", dst: " << get_dst().get_id()
+    << "}";
+  return os.str();
 }
 
 // -----------------------------------------------------------------------------

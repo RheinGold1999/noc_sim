@@ -10,11 +10,11 @@
 DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name) :
   ModuleBase(parent, name)
 {
-  ASSERT(
-    NocConfig::network_lvl_0_num == (8 + 1) ||
-    NocConfig::network_lvl_0_num == (12 + 1) ||
-    NocConfig::network_lvl_0_num == (16 + 1)
-  );
+  // ASSERT(
+  //   NocConfig::network_lvl_0_num == (8 + 1) ||
+  //   NocConfig::network_lvl_0_num == (12 + 1) ||
+  //   NocConfig::network_lvl_0_num == (16 + 1)
+  // );
   ASSERT(NocConfig::network_lvl_1_num == 2);
 
   m_node_num = get_node_num();
@@ -43,18 +43,15 @@ DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name) :
       os.str("");
       os << "bridge_router_" << i;
       m_routers[i] = new BridgeRouter(this, os.str(), coord);
-      NodeAddr bridge_addr(0, 0, (i / NocConfig::network_lvl_0_num), NodeAddr::MASKED);
-      dynamic_cast<BridgeRouter*>(m_routers[i])->set_addr(bridge_addr);
+      dynamic_cast<BridgeRouter*>(m_routers[i])->set_addr(0, NodeAddr::MASKED);
       m_nodes[i] = nullptr;
     } else {
       os.str("");
       os << "node_router_" << i;
       m_routers[i] = new NodeRouter(this, os.str(), coord);
-
       os.str("");
       os << "node_" << i;
       m_nodes[i] = new Node(this, os.str(), coord);
-
       dynamic_cast<NodeRouter*>(m_routers[i])->connect_node(m_nodes[i]);
     }
   }

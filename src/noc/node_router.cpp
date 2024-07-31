@@ -54,8 +54,6 @@ NodeRouter::NodeRouter(
     m_arb_flits[i] = nullptr;
   }
 
-  m_inflight_pkts.clear();
-
   INFO("created: {}", m_coord.to_str());
 }
 
@@ -102,21 +100,26 @@ NodeRouter::transfer()
     if (eje_i[i]->can_read()) {
       Flit* flit = eje_i[i]->read();
       if (is_this_dst(flit)) {
+        DEBUG("rcv flit: {}", flit->to_str());
         if (m_eje_que[i]->can_write()) {
           m_eje_que[i]->write(flit);
-          flit->m_owner->m_arrived_flits_num++;
+          flit->get_pkt()->m_arrived_flits_num++;
+          DEBUG("push to eje_que: {}", flit->to_str());
         } else {
           // TODO: write to retransmit buffer
         }
       } else {
         m_arb_flits[i] = flit;
+        DEBUG("forward flit: {}", flit->to_str());
       }
     }
   }
 
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (node_i[i]->can_read() && m_inj_que[i]->can_write()) {
-      m_inj_que[i]->write(node_i[i]->read());
+      Flit* flit = node_i[i]->read();
+      DEBUG("get flit from node, {}", flit->to_str());
+      m_inj_que[i]->write(flit);
     }
   }
 }
@@ -127,9 +130,7 @@ NodeRouter::process()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (!m_arb_flits[i] && m_inj_que[i]->can_read()) {
       Flit* flit = m_inj_que[i]->read();
-      if (flit->m_is_head) {
-        m_inflight_pkts.insert(flit->m_owner);
-      }
+      DEBUG("arb flit to ring: {}", flit->to_str());
       m_arb_flits[i] = flit;
     }
   }
@@ -142,6 +143,7 @@ NodeRouter::update()
     ASSERT(inj_o[i]->can_write());
     if (m_arb_flits[i]) {
       inj_o[i]->write(m_arb_flits[i]);
+      DEBUG("inj flit to ring, {}", m_arb_flits[i]->to_str());
       m_arb_flits[i] = nullptr;
     }
   }
@@ -157,5 +159,11 @@ NodeAddr
 NodeRouter::get_addr() const
 {
   return m_coord.get_addr();
+}
+
+Coord
+NodeRouter::get_coord() const
+{
+  return m_coord;
 }
 

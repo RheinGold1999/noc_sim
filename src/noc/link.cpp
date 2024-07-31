@@ -50,6 +50,7 @@ Link::transfer()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (link_i[i]->can_read()) {
       m_pipeline_regs[i] = link_i[i]->read();
+      // DEBUG("rcv flit: {}", m_pipeline_regs[i]->to_str());
     }
   }
 }
@@ -67,6 +68,7 @@ Link::update()
     if (m_pipeline_regs[i]) {
       ASSERT(link_o[i]->can_write());
       link_o[i]->write(m_pipeline_regs[i]);
+      DEBUG("send flit: {}", m_pipeline_regs[i]->to_str());
       m_pipeline_regs[i] = nullptr;
     }
   }
@@ -145,9 +147,9 @@ Link::connect(Router* up, Router* dn)
   BridgeRouter* bridge_up = dynamic_cast<BridgeRouter*>(up);
   BridgeRouter* bridge_dn = dynamic_cast<BridgeRouter*>(dn);
 
-  m_addr_up = up->get_addr();
-  m_addr_dn = dn->get_addr();
-  INFO("connect {} <-> {}", m_addr_up.to_str(), m_addr_dn.to_str());
+  m_coord_up = up->get_coord();
+  m_coord_dn = dn->get_coord();
+  INFO("{} <-> {}", m_coord_up.to_str(), m_coord_dn.to_str());
 
   if (node_up && node_dn) {
     connect(node_up, node_dn);

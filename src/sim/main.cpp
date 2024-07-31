@@ -7,6 +7,7 @@
 #include "model_utils/simulator.h"
 #include "log/logger.h"
 #include "config/config_manager.h"
+#include "config/global_config.h"
 #include "noc/double_ring.h"
 
 
@@ -99,7 +100,7 @@ int main(int argc, char** argv)
   // -------------------------------------------------------
   DoubleRing double_ring(top, "double_ring");
 
-  Simulator::run(10000);
+  Simulator::run(GlobalConfig::max_tick);
   
   return 0;
 }

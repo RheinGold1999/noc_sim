@@ -20,6 +20,7 @@ public:
   virtual void update() override;
 
   virtual NodeAddr get_addr() const = 0;
+  virtual Coord get_coord() const = 0;
 };
 
 #endif /* __ROUTER_H__ */

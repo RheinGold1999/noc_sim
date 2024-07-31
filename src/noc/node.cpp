@@ -30,7 +30,7 @@ Node::Node(const ModelBase* parent, const std::string& name, const Coord& coord)
 
   m_arb_flits = new Flit* [NocConfig::ring_width];
 
-  INFO("created");
+  INFO("created: {}", m_coord.to_str());
 }
 
 Node::~Node()
@@ -52,12 +52,12 @@ Node::transfer()
     if (flit_i[i]->can_read()) {
       Flit* flit = flit_i[i]->read();
       Packet* pkt = flit->get_pkt();
-      if (flit->m_is_head) {
+      DEBUG("rcv flit from node_router: {}", flit->to_str());
+      if (flit->is_tail()) {
+        rcv_pkt(pkt);
+      } else if (flit->is_head()) {
         ASSERT(m_rob_map.count(pkt) == 0);
         m_rob_map[pkt] = {flit};
-      } else if (flit->m_is_tail) {
-        ASSERT(m_rob_map.count(pkt) == 1);
-        rcv_pkt(pkt);
       } else {
         ASSERT(m_rob_map.count(pkt) == 1);
         m_rob_map[pkt].emplace_back(flit);
@@ -80,6 +80,10 @@ Node::update()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (m_arb_flits[i] && flit_o[i]->can_write()) {
       flit_o[i]->write(m_arb_flits[i]);
+      if (m_arb_flits[i]->is_tail()) {
+        m_inflight_req_set.insert(m_arb_flits[i]->get_pkt());
+      }
+      DEBUG("inj flit: {}", m_arb_flits[i]->to_str());
       m_arb_flits[i] = nullptr;
     }
   }
@@ -88,7 +92,7 @@ Node::update()
 void
 Node::gen_req_pkt()
 {
-  int cyc_intval = 1.0 * 2 / NocConfig::node_inj_rate;
+  static int cyc_intval = 1.0 * 2 / NocConfig::node_inj_rate;
   if (Simulator::curr_tick() % cyc_intval == 0) {
     Packet* pkt = PacketManager::acquire(
       m_coord,
@@ -98,6 +102,7 @@ Node::gen_req_pkt()
       Simulator::curr_tick()
     );
     m_req_que.emplace_back(pkt);
+    // DEBUG("gen req, req_que.size: {}", m_req_que.size());
   }
 }
 
@@ -124,6 +129,8 @@ Node::gen_rsp_pkt(Packet* req_pkt)
     Packet::Parity::DONT_CARE,
     req_pkt
   );
+  INFO("rcv req_pkt: {}", req_pkt->to_str());
+  INFO("gen rsp_pkt: {}", rsp_pkt->to_str());
   m_rsp_que.emplace_back(rsp_pkt);
 }
 
@@ -159,29 +166,34 @@ Node::inj_arb()
 void
 Node::rcv_pkt(Packet* pkt)
 {
+  if (m_rob_map.count(pkt)) {
+    m_rob_map.erase(pkt);
+  }
+
   switch (pkt->get_type()) {
     case (Packet::PktType::READ_REQ):
     case (Packet::PktType::WRITE_REQ): {
       gen_rsp_pkt(pkt);
       break;
     }
-
     case (Packet::PktType::READ_RSP):
     case (Packet::PktType::WRITE_RSP): {
       Packet* req_pkt = pkt->get_req_pkt();
+      INFO("rcv rsp: {}", pkt->to_str());
+      INFO("cor req: {}", req_pkt->to_str());
       ASSERT(m_inflight_req_set.count(req_pkt) == 1);
       m_inflight_req_set.erase(req_pkt);
       // TODO: statistics for req_pkt
-    }
 
+      PacketManager::release(pkt);
+      PacketManager::release(req_pkt);
+      break;
+    }
     default: {
-      ERROR("unknown Packet Type");
+      ERROR("unknown pkt type: {}", pkt->to_str());
       break;
     }
   }
-
-  m_rob_map.erase(pkt);
-  PacketManager::release(pkt);
 }
 
 Flit*

@@ -40,9 +40,10 @@ public:
   void update() override;
 
   bool is_this_dst(const Flit* flit) const;
-  NodeAddr get_addr() const override;
-
   void connect_node(Node* node);
+
+  NodeAddr get_addr() const override;
+  Coord get_coord() const override;
 
 private:
   FIFO<Flit*>** m_inj_que;
@@ -50,7 +51,6 @@ private:
   Coord m_coord;
   Flit** m_arb_flits;
 
-  std::set<const Packet*> m_inflight_pkts;
 };
 
 #endif /* __NODE_H__ */
