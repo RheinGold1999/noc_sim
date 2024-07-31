@@ -37,9 +37,12 @@ public:
   );
   virtual ~ModelBase();
   
-  virtual void transfer() = 0;
-  virtual void process() = 0;
-  virtual void update() = 0;
+  virtual void transfer() = 0;  // invoked in _cyc_phase_1
+  virtual void process() = 0;   // invoked in _cyc_phase_2
+  virtual void update() = 0;    // invoked in _cyc_phase_3
+
+  virtual void elaborate(); // before simulation
+  virtual void finalize();  // after simulation
 
   std::string full_name() const;
   std::string base_name() const;
@@ -57,6 +60,9 @@ protected:
   virtual void _cyc_phase_1() final;
   virtual void _cyc_phase_2() final;
   virtual void _cyc_phase_3() final;
+
+  virtual void _elaborate() final;
+  virtual void _finalize() final;
 
 private:
   bool has_logger() const;

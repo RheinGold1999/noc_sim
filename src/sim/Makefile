@@ -7,9 +7,14 @@ HRD = $(wildcard *.h)
 HRD += $(wildcard ../log/*.h)
 HRD += $(wildcard ../model_utils/*.h)
 
-test.exe: $(SRC) $(HRD)
+comp: $(SRC) $(HRD)
 	@echo "src: $(SRC)"
 	g++ -std=c++17 -g -O0 -o test.exe $(SRC) -I./ -I../ -I../log/
+
+dbg: $(SRC) $(HRD)
+	@echo "src: $(SRC)"
+	g++ -std=c++17 -fsanitize=address -g -fno-omit-frame-pointer \
+	-g -O0 -o test.exe $(SRC) -I./ -I../ -I../log/
 
 .PHONY: run
 run:

@@ -22,6 +22,9 @@ private:
   void process() override;
   void update() override;
 
+  void elaborate() override;
+  // void finalize() override;
+
 public:
   static Top* instance();
 

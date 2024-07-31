@@ -26,7 +26,9 @@ void
 Simulator::run(uint64_t cyc)
 {
   elaborate();
+  _INFO("elabortion done...");
   simulate(cyc);
+  _INFO("simulation done...");
   finalize();
 }
 
@@ -40,6 +42,7 @@ Simulator::simulate(uint64_t cyc)
     top->_cyc_phase_3();
 
     if ((cyc > 0 && s_tick >= cyc) || s_stop) {
+      _INFO("simulation ends...");
       break;
     }
 
@@ -50,41 +53,14 @@ Simulator::simulate(uint64_t cyc)
 void
 Simulator::elaborate()
 {
-  update_logger_level();
-  check_ports_connection();
+  Top* top = Top::instance();
+  top->_elaborate();
 }
 
 void
 Simulator::finalize()
 {
-  
-}
-
-void
-Simulator::check_ports_connection()
-{
-  std::list<const ModelBase*> unbound_ports_list;
-
-  for (auto mdl : ModelBase::walk_tree_node(Top::instance())) {
-    if (    mdl->m_type == ModelBase::ModelType::PORT
-         && !dynamic_cast<const PortBase*>(mdl)->is_bound() 
-    ) {
-      unbound_ports_list.emplace_back(mdl);
-    }
-  }
-
-  if (!unbound_ports_list.empty()) {
-    for (const auto p : unbound_ports_list) {
-      _ERROR("The port {} is unbound", p->full_name());
-    }
-    assert(false);
-  }
-}
-
-void
-Simulator::update_logger_level()
-{
-  Top::logger->set_level((int)GlobalConfig::top_dbg_lvl);
-  _CRITICAL("Top logger level is: {}", (int)Top::logger->m_spdlogger->level());
+  Top* top = Top::instance();
+  top->_finalize();
 }
 

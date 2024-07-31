@@ -102,7 +102,7 @@ Node::gen_req_pkt()
       Simulator::curr_tick()
     );
     m_req_que.emplace_back(pkt);
-    // DEBUG("gen req, req_que.size: {}", m_req_que.size());
+    DEBUG("gen req_pkt: {}", pkt->to_str());
   }
 }
 

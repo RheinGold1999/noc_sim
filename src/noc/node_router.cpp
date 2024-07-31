@@ -99,18 +99,20 @@ NodeRouter::transfer()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (eje_i[i]->can_read()) {
       Flit* flit = eje_i[i]->read();
+      DEBUG("ch: {}, rcv flit: {}", i, flit->to_str());
       if (is_this_dst(flit)) {
-        DEBUG("rcv flit: {}", flit->to_str());
         if (m_eje_que[i]->can_write()) {
           m_eje_que[i]->write(flit);
           flit->get_pkt()->m_arrived_flits_num++;
-          DEBUG("push to eje_que: {}", flit->to_str());
+          DEBUG("ch: {}, push to eje_que: {}", i, flit->to_str());
         } else {
           // TODO: write to retransmit buffer
+          DEBUG("ch: {}, eje_que is full, need retransmit: {}",
+            i, flit->to_str());
         }
       } else {
         m_arb_flits[i] = flit;
-        DEBUG("forward flit: {}", flit->to_str());
+        // DEBUG("forward flit: {}", flit->to_str());
       }
     }
   }
@@ -118,7 +120,7 @@ NodeRouter::transfer()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (node_i[i]->can_read() && m_inj_que[i]->can_write()) {
       Flit* flit = node_i[i]->read();
-      DEBUG("get flit from node, {}", flit->to_str());
+      DEBUG("ch: {}, get flit from node, {}", i, flit->to_str());
       m_inj_que[i]->write(flit);
     }
   }
@@ -130,7 +132,7 @@ NodeRouter::process()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (!m_arb_flits[i] && m_inj_que[i]->can_read()) {
       Flit* flit = m_inj_que[i]->read();
-      DEBUG("arb flit to ring: {}", flit->to_str());
+      DEBUG("ch {}, arb flit to ring: {}", i, flit->to_str());
       m_arb_flits[i] = flit;
     }
   }
@@ -143,14 +145,16 @@ NodeRouter::update()
     ASSERT(inj_o[i]->can_write());
     if (m_arb_flits[i]) {
       inj_o[i]->write(m_arb_flits[i]);
-      DEBUG("inj flit to ring, {}", m_arb_flits[i]->to_str());
+      DEBUG("ch {}, inj flit to ring: {}", i, m_arb_flits[i]->to_str());
       m_arb_flits[i] = nullptr;
     }
   }
 
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (node_o[i]->can_write() && m_eje_que[i]->can_read()) {
-      node_o[i]->write(m_eje_que[i]->read());
+      Flit* flit = m_eje_que[i]->read();
+      DEBUG("ch {}, send eje_que_flit to node: {}", i, flit->to_str());
+      node_o[i]->write(flit);
     }
   }
 }

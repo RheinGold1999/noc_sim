@@ -33,6 +33,10 @@ Logger::set_level(int lvl) const
 
 std::list<Logger*> Logger::s_logger_list;
 
+const std::string Logger::lvl_str[] = {
+  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"
+};
+
 const Logger*
 Logger::create_logger(const ModelBase* model)
 {

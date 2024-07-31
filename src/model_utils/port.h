@@ -24,6 +24,14 @@ protected:
   void process() override {}
   void update() override {}
 
+  void elaborate() override
+  {
+    if (!is_bound()) {
+      ERROR("NOT bound!!!");
+      abort();
+    }
+  }
+
   bool is_bound() const { return m_is_bound; }
   void set_bound() { m_is_bound = true; }
 

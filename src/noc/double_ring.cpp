@@ -8,7 +8,7 @@
 #include "log/logger.h"
 
 DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name) :
-  ModuleBase(parent, name)
+  Network(parent, name)
 {
   // ASSERT(
   //   NocConfig::network_lvl_0_num == (8 + 1) ||

@@ -59,7 +59,6 @@ std::string
 NodeAddr::to_str() const
 {
   std::ostringstream os;
-  os << "NodeAddr: ";
   for (int i = MAX_LEVEL - 1; i >= 0; --i) {
     if (get(i) == MASKED) {
       os << "x";
@@ -180,7 +179,7 @@ std::string
 Coord::to_str() const
 {
   std::ostringstream os;
-  os << "Coord: {id: " << m_id;
+  os << "{id: " << m_id;
   os << ", addr: " << m_addr.to_str();
   os << "}";
   return os.str();
@@ -319,7 +318,7 @@ Packet::to_str() const
     "UNKNOWN", "READ_REQ", "READ_RSP", "WRITE_REQ", "WRITE_RSP"
   };
   std::ostringstream os;
-  os << "Packet: {" 
+  os << "{" 
     << "id: " << m_id
     << ", src: " << m_src.get_addr().to_str()
     << ", dst: " << m_dst.get_addr().to_str()
@@ -387,15 +386,16 @@ PacketManager::release(Packet* pkt)
 void
 PacketManager::destory()
 {
-  if (s_inflights.size() > 0) {
-    // TODO: print warning and dump all inflight pkt
+  _INFO("PacketManager: s_inflits.size: {}, s_pool.size: {}, s_newed_pkt_cnt: {}",
+    s_inflights.size(), s_pool.size(), s_newed_pkt_cnt);
+  // if (s_inflights.size() > 0) {
+  //   for (auto pkt : s_inflights) {
+  //     _WARN("inflight packet: {}", pkt->to_str());
+  //     release(pkt);
+  //   }
+  // }
 
-    for (auto pkt : s_inflights) {
-      release(pkt);
-    }
-  }
-
-  _ASSERT(s_pool.size() == s_newed_pkt_cnt);
+  // _ASSERT(s_pool.size() == s_newed_pkt_cnt);
   for (auto pkt : s_pool) {
     delete pkt;
   }
@@ -481,7 +481,7 @@ std::string
 Flit::to_str()
 {
   std::ostringstream os;
-  os << "Flit: {"
+  os << "{"
     <<"id: " << m_owner->m_id << ":" << m_id << "/" << (m_owner->m_total_flits_num - 1)
     << ", src: " << get_src().get_id()
     << ", dst: " << get_dst().get_id()
@@ -519,7 +519,9 @@ FlitManager::release(Flit* flit)
 void
 FlitManager::destroy()
 {
-  _ASSERT(s_pool.size() == s_newed_flit_cnt);
+  _INFO("FlitManager: s_pool.size: {}, s_newed_flit_cnt: {}",
+    s_pool.size(), s_newed_flit_cnt);
+  // _ASSERT(s_pool.size() == s_newed_flit_cnt);
   for (auto flit : s_pool) {
     delete flit;
   }

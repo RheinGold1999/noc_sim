@@ -21,7 +21,7 @@
 class Logger
 {
   friend class ModelBase;
-  friend class Simulator;
+  friend class Top;
 
   typedef std::shared_ptr<spdlog::logger> spd_logger_t;
 
@@ -112,6 +112,9 @@ public:
   }
 
   bool has_spdlogger() const;
+
+public:
+  static const std::string lvl_str[];
 
 private:
   const ModelBase* m_model;

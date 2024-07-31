@@ -22,9 +22,9 @@ public:
   static void simulate(uint64_t cyc);
   static void finalize();
 
-private:
-  static void check_ports_connection();
-  static void update_logger_level();
+// private:
+//   static void check_ports_connection();
+//   static void update_logger_level();
 
 private:
   static uint64_t s_tick;

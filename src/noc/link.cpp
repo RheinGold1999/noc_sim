@@ -68,7 +68,7 @@ Link::update()
     if (m_pipeline_regs[i]) {
       ASSERT(link_o[i]->can_write());
       link_o[i]->write(m_pipeline_regs[i]);
-      DEBUG("send flit: {}", m_pipeline_regs[i]->to_str());
+      DEBUG("ch: {}, send flit: {}", i, m_pipeline_regs[i]->to_str());
       m_pipeline_regs[i] = nullptr;
     }
   }

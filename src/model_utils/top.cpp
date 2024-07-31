@@ -1,5 +1,8 @@
 #include "model_utils/top.h"
 #include "log/logger.h"
+#include "config/global_config.h"
+
+const Logger* Top::logger = Top::instance()->m_logger;
 
 Top::Top(): ModelBase(nullptr, "top")
 {
@@ -22,4 +25,11 @@ Top::instance()
   return &top;
 }
 
-const Logger* Top::logger = Top::instance()->m_logger;
+void
+Top::elaborate()
+{
+  m_logger->set_level((int)GlobalConfig::top_dbg_lvl);
+  int lvl = (int) m_logger->m_spdlogger->level();
+  CRITICAL("Top logger level is set to: {}", Logger::lvl_str[lvl]);
+}
+

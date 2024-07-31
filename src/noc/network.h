@@ -8,7 +8,8 @@ class Network
 {
 public:
   Network(const ModelBase* parent, const std::string& name);
-  ~Network();
+
+  void finalize() override;
 };
 
 #endif  /* __NETWORK_H__ */

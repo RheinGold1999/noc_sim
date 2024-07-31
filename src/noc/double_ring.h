@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "model_utils/module_base.h"
+#include "noc/network.h"
 #include "noc/data_type.h"
 
 class Router;
@@ -11,7 +11,7 @@ class Link;
 class Node;
 
 class DoubleRing
-  : public ModuleBase
+  : public Network
 {
 public:
   DoubleRing(const ModelBase* parent, const std::string& name);

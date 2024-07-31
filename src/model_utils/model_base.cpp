@@ -130,6 +130,32 @@ ModelBase::_cyc_phase_3()
   m_stage = CycStage::TRANSFER;
 }
 
+void
+ModelBase::_elaborate()
+{
+  elaborate();
+  for (auto ch : m_children) {
+    ch->_elaborate();
+  }
+}
+
+void
+ModelBase::_finalize()
+{
+  finalize();
+  for (auto ch : m_children) {
+    ch->_finalize();
+  }
+}
+
+void
+ModelBase::elaborate()
+{}
+
+void
+ModelBase::finalize()
+{}
+
 std::ostream& operator << (std::ostream &os, const ModelBase::CycStage &stage)
 {
   switch (stage) {
