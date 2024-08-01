@@ -73,6 +73,7 @@ public:
     if (get_stage() == CycStage::TRANSFER && m_port_out->m_vld) {
       return true;
     }
+    TRACE("stage: {}, vld: {}", get_stage_str(), m_port_out->m_vld);
     return false;
   }
 
@@ -120,7 +121,7 @@ public:
     if (get_stage() == CycStage::UPDATE && !m_vld) {
       return true;
     }
-    WARN("stage: {}, vld: {}", get_stage_str(), m_vld);
+    TRACE("stage: {}, vld: {}", get_stage_str(), m_vld);
     return false;
   }
 
