@@ -2,7 +2,7 @@
 #define __DATA_TYPE_H__
 
 // #include "noc/common.h"
-
+#include <vector>
 #include <list>
 #include <set>
 #include <array>
@@ -103,6 +103,7 @@ private:
   PktType m_type;
 
   int m_total_flits_num;
+  int m_poped_flits_num;
   uint64_t m_creation_time;
 
   Parity m_parity;
@@ -111,7 +112,7 @@ private:
 
 public:
   int m_arrived_flits_num;
-  std::list<Flit*> m_flits_list;
+  std::vector<Flit*> m_flits_vec;
   uint64_t m_injection_time;
 
 private:
@@ -145,6 +146,8 @@ public:
   Packet* get_req_pkt() const;
   Flit* pop_flit();
   int rest_flit_num() const;
+  bool is_req() const;
+  bool is_rsp() const;
 
   std::string to_str() const;
 };

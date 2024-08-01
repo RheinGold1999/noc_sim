@@ -209,6 +209,7 @@ Packet::Packet(
   , m_id(PacketManager::alloc_pkt_id())
   , m_type(type)
   , m_total_flits_num(flits_num)
+  , m_poped_flits_num(0)
   , m_arrived_flits_num(0)
   , m_parity(parity)
   , m_creation_time(creation_time)
@@ -216,12 +217,12 @@ Packet::Packet(
   , m_rsp_flit_num(1)
   , m_req_pkt(req_pkt)
 {
-  m_flits_list.clear();
+  m_flits_vec.clear();
   for (int i = 0; i < m_total_flits_num; ++i) {
-    m_flits_list.push_back(FlitManager::acquire(this, i));
+    m_flits_vec.emplace_back(FlitManager::acquire(this, i));
   }
-  m_flits_list.front()->m_is_head = true;
-  m_flits_list.back()->m_is_tail = true;
+  m_flits_vec.front()->m_is_head = true;
+  m_flits_vec.back()->m_is_tail = true;
 }
 
 void
@@ -241,6 +242,7 @@ Packet::init(
   m_type = type;
 
   m_total_flits_num = flits_num;
+  m_poped_flits_num = 0;
   m_arrived_flits_num = 0;
   m_parity = parity;
 
@@ -250,12 +252,12 @@ Packet::init(
   m_rsp_flit_num = 1;
   m_req_pkt = req_pkt;
 
-  _ASSERT(m_flits_list.empty());
+  _ASSERT(m_flits_vec.empty());
   for (int i = 0; i < m_total_flits_num; ++i) {
-    m_flits_list.push_back(FlitManager::acquire(this, i));
+    m_flits_vec.emplace_back(FlitManager::acquire(this, i));
   }
-  m_flits_list.front()->m_is_head = true;
-  m_flits_list.back()->m_is_tail = true;
+  m_flits_vec.front()->m_is_head = true;
+  m_flits_vec.back()->m_is_tail = true;
 }
 
 int
@@ -298,9 +300,13 @@ Flit*
 Packet::pop_flit()
 {
   Flit* flit = nullptr;
-  if (!m_flits_list.empty()) {
-    flit = m_flits_list.front();
-    m_flits_list.pop_front();
+  // if (!m_flits_list.empty()) {
+  //   flit = m_flits_list.front();
+  //   m_flits_list.pop_front();
+  // }
+  if (m_poped_flits_num < m_total_flits_num) {
+    flit = m_flits_vec[m_poped_flits_num];
+    m_poped_flits_num++;
   }
   return flit; 
 }
@@ -308,7 +314,19 @@ Packet::pop_flit()
 int
 Packet::rest_flit_num() const
 {
-  return m_flits_list.size();
+  return m_total_flits_num - m_poped_flits_num;
+}
+
+bool
+Packet::is_req() const
+{
+  return m_type == PktType::READ_REQ || m_type == PktType::WRITE_REQ;
+}
+
+bool
+Packet::is_rsp() const
+{
+  return m_type == PktType::READ_RSP || m_type == PktType::WRITE_RSP;
 }
 
 std::string
@@ -336,8 +354,8 @@ Packet::to_str() const
 // -----------------------------------------------------------------------------
 uint64_t PacketManager::s_alloc_pkt_cnt = 0;
 uint64_t PacketManager::s_newed_pkt_cnt = 0;
-std::list<Packet*> PacketManager::s_pool = std::list<Packet*>();
-std::set<Packet*> PacketManager::s_inflights = std::set<Packet*>();
+std::list<Packet*> PacketManager::s_pool;
+std::set<Packet*> PacketManager::s_inflights;
 
 int
 PacketManager::alloc_pkt_id()
@@ -365,6 +383,7 @@ PacketManager::acquire(
     s_pool.pop_front();
     pkt->init(src, dst, type, flits_num, creation_time, parity, req_pkt);
   }
+  _ASSERT(s_inflights.find(pkt) == s_inflights.end());
   s_inflights.insert(pkt);
   return pkt;
 }
@@ -372,15 +391,15 @@ PacketManager::acquire(
 void
 PacketManager::release(Packet* pkt)
 {
-  for (auto flit : pkt->m_flits_list) {
+  for (auto flit : pkt->m_flits_vec) {
     FlitManager::release(flit);
   }
-  pkt->m_flits_list.clear();
+  pkt->m_flits_vec.clear();
 
-  _ASSERT(s_inflights.count(pkt) > 0);
+  _ASSERT(s_inflights.find(pkt) != s_inflights.end());
   s_inflights.erase(pkt);
 
-  s_pool.push_back(pkt);
+  s_pool.emplace_back(pkt);
 }
 
 void
@@ -388,14 +407,24 @@ PacketManager::destory()
 {
   _INFO("PacketManager: s_inflits.size: {}, s_pool.size: {}, s_newed_pkt_cnt: {}",
     s_inflights.size(), s_pool.size(), s_newed_pkt_cnt);
-  // if (s_inflights.size() > 0) {
-  //   for (auto pkt : s_inflights) {
-  //     _WARN("inflight packet: {}", pkt->to_str());
-  //     release(pkt);
-  //   }
-  // }
+  if (s_inflights.size() > 0) {
+    for (auto pkt : s_inflights) {
+      _WARN("inflight packet: {}", pkt->to_str());
+      /** ATTENTION: 
+       * release(pkt) will change the size of s_inflights, 
+       * which is NOT allowed in the for-loop.
+       */
+      // release(pkt);  // DONT do this
+      for (auto flit : pkt->m_flits_vec) {
+        _WARN("inflight flit: {}", flit->to_str());
+        FlitManager::release(flit);
+      }
+      pkt->m_flits_vec.clear();
+      s_pool.emplace_back(pkt);
+    }
+  }
 
-  // _ASSERT(s_pool.size() == s_newed_pkt_cnt);
+  _ASSERT(s_pool.size() == s_newed_pkt_cnt);
   for (auto pkt : s_pool) {
     delete pkt;
   }
@@ -513,7 +542,10 @@ FlitManager::acquire(Packet* owner, int id)
 void
 FlitManager::release(Flit* flit)
 {
-  s_pool.push_back(flit);
+  _ASSERT(
+    std::find(s_pool.begin(), s_pool.end(), flit) == s_pool.end()
+  );
+  s_pool.emplace_back(flit);
 }
 
 void
@@ -521,7 +553,7 @@ FlitManager::destroy()
 {
   _INFO("FlitManager: s_pool.size: {}, s_newed_flit_cnt: {}",
     s_pool.size(), s_newed_flit_cnt);
-  // _ASSERT(s_pool.size() == s_newed_flit_cnt);
+  _ASSERT(s_pool.size() == s_newed_flit_cnt);
   for (auto flit : s_pool) {
     delete flit;
   }

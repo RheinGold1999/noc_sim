@@ -44,7 +44,7 @@ private:
   ) const {
     std::ostringstream os;
     if (m_model) {
-      os << "[" << Simulator::curr_tick() << ":" << m_model->get_stage() << "] "
+      os << "[" << Simulator::curr_tick() << ":" << m_model->get_stage_str() << "] "
          << "[" << src_loc.file << ":" << src_loc.line << "] "
          << "[" << src_loc.func << "] [" << m_model->base_name() << "] ";
     } else {

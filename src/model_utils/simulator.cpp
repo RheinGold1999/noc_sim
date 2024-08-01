@@ -30,6 +30,7 @@ Simulator::run(uint64_t cyc)
   simulate(cyc);
   _INFO("simulation done...");
   finalize();
+  _INFO("finalization done...")
 }
 
 void
@@ -42,7 +43,6 @@ Simulator::simulate(uint64_t cyc)
     top->_cyc_phase_3();
 
     if ((cyc > 0 && s_tick >= cyc) || s_stop) {
-      _INFO("simulation ends...");
       break;
     }
 

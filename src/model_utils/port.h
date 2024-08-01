@@ -27,8 +27,7 @@ protected:
   void elaborate() override
   {
     if (!is_bound()) {
-      ERROR("NOT bound!!!");
-      abort();
+      Top::instance()->register_unbound_port(this);
     }
   }
 
@@ -121,6 +120,7 @@ public:
     if (get_stage() == CycStage::UPDATE && !m_vld) {
       return true;
     }
+    WARN("stage: {}, vld: {}", get_stage_str(), m_vld);
     return false;
   }
 

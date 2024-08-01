@@ -12,7 +12,7 @@ ModelBase::ModelBase(
     m_children(std::list<ModelBase *>()),
     m_full_name(parent ? (parent->full_name() + "." + name) : name),
     m_base_name(name),
-    m_stage(CycStage::TRANSFER),
+    m_stage(CycStage::ELABORATE),
     m_type(ModelType::UNKNOWN)
 {
   if (parent) {
@@ -97,55 +97,82 @@ ModelBase::get_stage() const
   return m_stage;
 }
 
+std::string
+ModelBase::get_stage_str() const
+{
+  switch (m_stage) {
+    case CycStage::TRANSFER: {
+      return "T";
+    }
+    case CycStage::PROCESS: {
+      return "P";
+    }
+    case CycStage::UPDATE: {
+      return "U";
+    }
+    case CycStage::ELABORATE: {
+      return "E";
+    }
+    case CycStage::FINALIZE: {
+      return "F";
+    }
+    default: {
+      return "-";
+    }
+  }
+}
+
 void
 ModelBase::_cyc_phase_1()
 {
   // TRACE("{}", "transfer()");
-  transfer();
+  m_stage = CycStage::TRANSFER;
   for (auto ch : m_children) {
     ch->_cyc_phase_1();
   }
-  m_stage = CycStage::PROCESS;
+  transfer();
 }
 
 void
 ModelBase::_cyc_phase_2()
 {
   // TRACE("{}", "process()");
-  process();
+  m_stage = CycStage::PROCESS;
   for (auto ch : m_children) {
     ch->_cyc_phase_2();
   }
-  m_stage = CycStage::UPDATE;
+  process();
 }
 
 void
 ModelBase::_cyc_phase_3()
 {
   // TRACE("{}", "update()");
-  update();
+  m_stage = CycStage::UPDATE;
   for (auto ch : m_children) {
     ch->_cyc_phase_3();
   }
-  m_stage = CycStage::TRANSFER;
+  update();
 }
 
 void
 ModelBase::_elaborate()
 {
-  elaborate();
+  m_stage = CycStage::ELABORATE;
   for (auto ch : m_children) {
     ch->_elaborate();
   }
+  elaborate();
 }
 
 void
 ModelBase::_finalize()
 {
-  finalize();
+  m_stage = CycStage::FINALIZE;
   for (auto ch : m_children) {
     ch->_finalize();
   }
+  finalize();
 }
 
 void
@@ -155,27 +182,4 @@ ModelBase::elaborate()
 void
 ModelBase::finalize()
 {}
-
-std::ostream& operator << (std::ostream &os, const ModelBase::CycStage &stage)
-{
-  switch (stage) {
-    case ModelBase::CycStage::TRANSFER: {
-      os << "T";
-      break;
-    }
-    case ModelBase::CycStage::PROCESS: {
-      os << "P";
-      break;
-    }
-    case ModelBase::CycStage::UPDATE: {
-      os << "U";
-      break;
-    }
-    default: {
-      os << "-";
-      break;
-    }
-  }
-  return os;
-}
 

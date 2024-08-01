@@ -15,9 +15,13 @@ public:
   enum class CycStage
   { 
     UNKNOWN = 0,
+    ELABORATE,
+
     TRANSFER,
     PROCESS,
     UPDATE,
+
+    FINALIZE,
   };
 
   enum class ModelType
@@ -50,6 +54,7 @@ public:
   void add_child(ModelBase* child) const;
 
   CycStage get_stage() const;
+  std::string get_stage_str() const;
 
   void set_logger(const Logger* logger);
 
@@ -78,7 +83,5 @@ protected:
   CycStage m_stage;
   ModelType m_type;
 };
-
-std::ostream& operator << (std::ostream& os, const ModelBase::CycStage& stage);
 
 #endif  /* __MODEL_BASE_H__ */

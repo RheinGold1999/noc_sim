@@ -80,10 +80,7 @@ Node::update()
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (m_arb_flits[i] && flit_o[i]->can_write()) {
       flit_o[i]->write(m_arb_flits[i]);
-      if (m_arb_flits[i]->is_tail()) {
-        m_inflight_req_set.insert(m_arb_flits[i]->get_pkt());
-      }
-      DEBUG("inj flit: {}", m_arb_flits[i]->to_str());
+      DEBUG("ch: {}, inj flit: {}", i, m_arb_flits[i]->to_str());
       m_arb_flits[i] = nullptr;
     }
   }
@@ -116,7 +113,7 @@ Node::gen_rsp_pkt(Packet* req_pkt)
   } else if (req_pkt->get_type() == Packet::PktType::WRITE_REQ) {
     rsp_type = Packet::PktType::WRITE_RSP;
   } else {
-    ERROR("Wrong req_pkt type: {}", (int)(req_pkt->get_type()));
+    ERROR("Wrong req_pkt type: {}", req_pkt->to_str());
   }
   Coord rsp_src = req_pkt->get_dst();
   Coord rsp_dst = req_pkt->get_src();
@@ -159,6 +156,12 @@ Node::inj_arb()
       }
     }
     m_arb_flits[i] = flit;
+    if (flit && flit->is_tail()) {
+      Packet* pkt = flit->get_pkt();
+      if (pkt->is_req()) {
+        m_inflight_req_set.insert(pkt);
+      }
+    }
   }
   req_rsp_rr++;
 }
@@ -170,29 +173,20 @@ Node::rcv_pkt(Packet* pkt)
     m_rob_map.erase(pkt);
   }
 
-  switch (pkt->get_type()) {
-    case (Packet::PktType::READ_REQ):
-    case (Packet::PktType::WRITE_REQ): {
-      gen_rsp_pkt(pkt);
-      break;
-    }
-    case (Packet::PktType::READ_RSP):
-    case (Packet::PktType::WRITE_RSP): {
-      Packet* req_pkt = pkt->get_req_pkt();
-      INFO("rcv rsp: {}", pkt->to_str());
-      INFO("cor req: {}", req_pkt->to_str());
-      ASSERT(m_inflight_req_set.count(req_pkt) == 1);
-      m_inflight_req_set.erase(req_pkt);
-      // TODO: statistics for req_pkt
+  if (pkt->is_req()) {
+    gen_rsp_pkt(pkt);
+  } else if (pkt->is_rsp()) {
+    Packet* req_pkt = pkt->get_req_pkt();
+    INFO("rcv rsp: {}", pkt->to_str());
+    INFO("cor req: {}", req_pkt->to_str());
+    ASSERT(m_inflight_req_set.count(req_pkt) == 1);
+    m_inflight_req_set.erase(req_pkt);
+    // TODO: statistics for req_pkt
 
-      PacketManager::release(pkt);
-      PacketManager::release(req_pkt);
-      break;
-    }
-    default: {
-      ERROR("unknown pkt type: {}", pkt->to_str());
-      break;
-    }
+    PacketManager::release(pkt);
+    PacketManager::release(req_pkt);
+  } else {
+    ERROR("unknown pkt type: {}", pkt->to_str());
   }
 }
 
