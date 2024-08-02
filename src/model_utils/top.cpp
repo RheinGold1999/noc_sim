@@ -1,5 +1,6 @@
 #include "model_utils/top.h"
 #include "model_utils/port.h"
+#include "model_utils/monitor.h"
 #include "log/logger.h"
 #include "config/global_config.h"
 
@@ -42,11 +43,24 @@ Top::elaborate()
     }
     abort();
   }
+
+  // check if all monitors are bound
+  if (!m_unbound_monitor_list.empty()) {
+    for (auto m : m_unbound_monitor_list) {
+      CRITICAL("unbound monitor: {}", m->full_name());
+    }
+  }
 }
 
 void
 Top::register_unbound_port(const PortBase* port)
 {
   m_unbound_port_list.emplace_back(port);
+}
+
+void
+Top::register_unbound_monitor(const MonitorBase* monitor)
+{
+  m_unbound_monitor_list.emplace_back(monitor);
 }
 

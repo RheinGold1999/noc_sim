@@ -7,6 +7,7 @@
 
 class Logger;
 class PortBase;
+class MonitorBase;
 
 class Top
   : public ModelBase
@@ -22,6 +23,7 @@ private:
 
 public:
   void register_unbound_port(const PortBase* port);
+  void register_unbound_monitor(const MonitorBase* monitor);
 
 private:
   void transfer() override;
@@ -33,6 +35,7 @@ private:
 
 private:
   std::list<const PortBase*> m_unbound_port_list;
+  std::list<const MonitorBase*> m_unbound_monitor_list;
 
 public:
   static Top* instance();

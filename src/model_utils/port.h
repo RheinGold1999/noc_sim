@@ -5,12 +5,15 @@
 
 #include "model_utils/model_base.h"
 #include "model_utils/simulator.h"
+#include "model_utils/monitor.h"
 #include "log/logger.h"
 
 class PortBase
   : public ModelBase
 {
   friend class Simulator;
+  friend class MonitorBase;
+
 public:
   PortBase(const ModelBase* parent, const std::string& name)
     : ModelBase(parent, name)
@@ -36,6 +39,9 @@ protected:
 
 private:
   bool m_is_bound{false};
+
+protected:
+  std::list<MonitorBase*> m_monitor_list;
 };
 
 template<class T>
@@ -50,6 +56,17 @@ public:
   StreamPortIn(const ModelBase* parent, const std::string& name)
     : PortBase(parent, name)
   {}
+
+  void elaborate() override
+  {
+    PortBase::elaborate();
+    for (auto m : m_monitor_list) {
+      Monitor<T>* mon = dynamic_cast<Monitor<T>*>(m);
+      if (!mon) {
+        ERROR("failed cast MonitorBase to Monitor<{}>", typeid(T).name());
+      }
+    }
+  }
 
   void bind(StreamPortOut<T>& port_out)
   {
@@ -81,6 +98,10 @@ public:
   {
     ASSERT(can_read());
     m_port_out->m_vld = false;
+    T data = m_port_out->m_data;
+    for (auto m : m_monitor_list) {
+      reinterpret_cast<Monitor<T>*>(m)->read_callback(data);
+    }
     return m_port_out->m_data;
   }
 
@@ -98,6 +119,17 @@ public:
   StreamPortOut(const ModelBase* parent, const std::string& name)
     : PortBase(parent, name)
   {}
+
+  void elaborate() override
+  {
+    PortBase::elaborate();
+    for (auto m : m_monitor_list) {
+      Monitor<T>* mon = dynamic_cast<Monitor<T>*>(m);
+      if (!mon) {
+        ERROR("failed cast MonitorBase to Monitor<{}>", typeid(T).name());
+      }
+    }
+  }
 
   void bind(StreamPortIn<T>& port_in)
   {
@@ -130,6 +162,9 @@ public:
     ASSERT(can_write());
     m_data = data;
     m_vld = true;
+    for (auto m : m_monitor_list) {
+      reinterpret_cast<Monitor<T>*>(m)->write_callback(data);
+    }
   }
 
 private:

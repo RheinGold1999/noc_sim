@@ -31,6 +31,7 @@ public:
     PORT,
     REGISTER,
     STORAGE,
+    MONITOR,
     TOP,
   };
 
@@ -45,8 +46,8 @@ public:
   virtual void process() = 0;   // invoked in _cyc_phase_2
   virtual void update() = 0;    // invoked in _cyc_phase_3
 
-  virtual void elaborate(); // before simulation
-  virtual void finalize();  // after simulation
+  virtual void elaborate();     // before simulation
+  virtual void finalize();      // after simulation
 
   std::string full_name() const;
   std::string base_name() const;
@@ -82,6 +83,7 @@ protected:
   std::string m_base_name;
   CycStage m_stage;
   ModelType m_type;
+
 };
 
 #endif  /* __MODEL_BASE_H__ */
