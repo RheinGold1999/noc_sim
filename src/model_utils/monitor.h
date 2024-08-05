@@ -47,8 +47,8 @@ public:
     MonitorBase(parent, name)
   {}
 
-  virtual void read_callback(const T& data) = 0;
-  virtual void write_callback(const T& data) = 0;
+  virtual void read_callback(T data, int id) = 0;
+  virtual void write_callback(T data, int id) = 0;
 };
 
 #endif /* __MONITOR_H__ */

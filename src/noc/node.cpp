@@ -21,11 +21,11 @@ Node::Node(const ModelBase* parent, const std::string& name, const Coord& coord)
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     os.str("");
     os << "flit_o_" << i;
-    flit_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    flit_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "flit_i_" << i;
-    flit_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    flit_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
   }
 
   m_arb_flits = new Flit* [NocConfig::ring_width];
@@ -134,7 +134,7 @@ Node::gen_rsp_pkt(Packet* req_pkt)
 void
 Node::inj_arb()
 {
-  static uint64_t req_rsp_rr = 0;
+  static uint16_t req_rsp_rr = 0;
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     if (m_arb_flits[i]) {
       // The output flit_o[i] is block

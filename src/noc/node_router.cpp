@@ -29,19 +29,19 @@ NodeRouter::NodeRouter(
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     os.str("");
     os << "inj_o_" << i;
-    inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    inj_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "eje_i_" << i;
-    eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    eje_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "node_o_" << i;
-    node_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    node_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "node_i_" << i;
-    node_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    node_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "inj_que_" << i;

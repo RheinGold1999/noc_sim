@@ -19,11 +19,11 @@ Link::Link(const ModelBase* parent, const std::string& name)
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     os.str("");
     os << "link_o_" << i;
-    link_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    link_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "link_i_" << i;
-    link_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    link_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
 
     m_pipeline_regs[i] = nullptr;
   }

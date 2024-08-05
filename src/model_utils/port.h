@@ -15,8 +15,9 @@ class PortBase
   friend class MonitorBase;
 
 public:
-  PortBase(const ModelBase* parent, const std::string& name)
-    : ModelBase(parent, name)
+  PortBase(const ModelBase* parent, const std::string& name, int id = 0) : 
+    ModelBase(parent, name),
+    m_id(id)
   {
     m_type = ModelType::PORT;
     m_base_name = parent->base_name() + "." + name;
@@ -42,6 +43,7 @@ private:
 
 protected:
   std::list<MonitorBase*> m_monitor_list;
+  const int m_id;
 };
 
 template<class T>
@@ -53,8 +55,8 @@ class StreamPortIn
 {
   friend class StreamPortOut<T>;
 public:
-  StreamPortIn(const ModelBase* parent, const std::string& name)
-    : PortBase(parent, name)
+  StreamPortIn(const ModelBase* parent, const std::string& name, int id = 0) :
+    PortBase(parent, name, id)
   {}
 
   void elaborate() override
@@ -63,7 +65,7 @@ public:
     for (auto m : m_monitor_list) {
       Monitor<T>* mon = dynamic_cast<Monitor<T>*>(m);
       if (!mon) {
-        ERROR("failed cast MonitorBase to Monitor<{}>", typeid(T).name());
+        ERROR("failed castint MonitorBase to Monitor<{}>", typeid(T).name());
       }
     }
   }
@@ -100,9 +102,9 @@ public:
     m_port_out->m_vld = false;
     T data = m_port_out->m_data;
     for (auto m : m_monitor_list) {
-      reinterpret_cast<Monitor<T>*>(m)->read_callback(data);
+      reinterpret_cast<Monitor<T>*>(m)->read_callback(data, m_id);
     }
-    return m_port_out->m_data;
+    return data;
   }
 
 private:
@@ -116,8 +118,8 @@ class StreamPortOut
 {
   friend class StreamPortIn<T>;
 public:
-  StreamPortOut(const ModelBase* parent, const std::string& name)
-    : PortBase(parent, name)
+  StreamPortOut(const ModelBase* parent, const std::string& name, int id = 0) :
+    PortBase(parent, name, id)
   {}
 
   void elaborate() override
@@ -126,7 +128,7 @@ public:
     for (auto m : m_monitor_list) {
       Monitor<T>* mon = dynamic_cast<Monitor<T>*>(m);
       if (!mon) {
-        ERROR("failed cast MonitorBase to Monitor<{}>", typeid(T).name());
+        ERROR("failed casting MonitorBase to Monitor<{}>", typeid(T).name());
       }
     }
   }
@@ -163,7 +165,7 @@ public:
     m_data = data;
     m_vld = true;
     for (auto m : m_monitor_list) {
-      reinterpret_cast<Monitor<T>*>(m)->write_callback(data);
+      reinterpret_cast<Monitor<T>*>(m)->write_callback(data, m_id);
     }
   }
 
@@ -183,8 +185,8 @@ class SignalPortIn
 {
   friend class SignalPortOut<T>;
 public:
-  SignalPortIn(const ModelBase* parent, const std::string& name)
-    : PortBase(parent, name)
+  SignalPortIn(const ModelBase* parent, const std::string& name, int id = 0) :
+    PortBase(parent, name, id)
   {}
 
   void bind(SignalPortOut<T>& port_out)
@@ -220,8 +222,8 @@ class SingalPortOut
 {
   friend class SignalPortIn<T>;
 public:
-  SingalPortOut(const ModelBase* parent, const std::string& name)
-    : PortBase(parent, name)
+  SingalPortOut(const ModelBase* parent, const std::string& name, int id = 0) :
+    PortBase(parent, name, id)
   {}
 
   void bind(SignalPortIn<T>& port_in)

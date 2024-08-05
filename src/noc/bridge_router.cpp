@@ -28,19 +28,19 @@ BridgeRouter::BridgeRouter(
   for (int i = 0; i < NocConfig::ring_width; ++i) {
     os.str("");
     os << "loc_inj_o_" << i;
-    loc_inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    loc_inj_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "loc_eje_i_" << i;
-    loc_eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    loc_eje_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "glb_inj_o_" << i;
-    glb_inj_o[i] = new StreamPortOut<Flit*>(this, os.str());
+    glb_inj_o[i] = new StreamPortOut<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "glb_eje_i_" << i;
-    glb_eje_i[i] = new StreamPortIn<Flit*>(this, os.str());
+    glb_eje_i[i] = new StreamPortIn<Flit*>(this, os.str(), i);
 
     os.str("");
     os << "loc2glb_que_" << i;
@@ -53,6 +53,7 @@ BridgeRouter::BridgeRouter(
     m_loc_arb_flits[i] = nullptr;
     m_glb_arb_flits[i] = nullptr;
   }
+
   INFO("created: {}", m_coord.to_str());
 }
 
