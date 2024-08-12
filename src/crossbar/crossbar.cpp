@@ -95,7 +95,7 @@ void
 CROSSBAR::request_thread(int mst_id)
 {
   while (true) {
-    wait(m_mst_begin_req_event[mst_id]);  // triggered by m_mst_req_arb[mst_id]
+    wait(m_mst_begin_req_event[mst_id]);  // triggered in req_arb_thread(mst_id)
 
     int slv_id = m_mst_arb_res[mst_id];
     transaction_type* trans = m_slv_req_buf[slv_id][mst_id];
@@ -144,7 +144,7 @@ void
 CROSSBAR::response_thread(int slv_id)
 {
   while (true) {
-    wait(m_slv_begin_rsp_event[slv_id]);  // triggered by m_slv_rsp_arb[slv_id]
+    wait(m_slv_begin_rsp_event[slv_id]);  // triggered in rsp_arb_thread(slv_id)
 
     int mst_id = m_slv_arb_res[slv_id];
     transaction_type* trans = m_mst_rsp_buf[mst_id][slv_id];
@@ -193,14 +193,16 @@ TEMPLATE
 void
 CROSSBAR::req_arb_thread(int mst_id)
 {
-  static uint16_t slv_id_rr = 0;
+  static int slv_id_rr = -1;
 
   while (true) {
     wait(m_mst_req_arb_event_que[mst_id]);
     
-    while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr) {
+    // Arbitration via Round Robin
+    do {
       slv_id_rr = (slv_id_rr + 1) % NR_OF_INITIATORS;
-    }
+    } while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr);
+
     m_mst_arb_res[mst_id] = slv_id_rr;
     m_mst_begin_req_event[mst_id].notify();
 
@@ -212,14 +214,16 @@ TEMPLATE
 void
 CROSSBAR::rsp_arb_thread(int slv_id)
 {
-  static uint16_t mst_id_rr = 0;
+  static int mst_id_rr = -1;
   
   while (true) {
     wait(m_slv_rsp_arb_event_que[slv_id]);
 
-    while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr) {
+    // Arbitration via Round Robin
+    do {
       mst_id_rr = (mst_id_rr + 1) % NR_OF_TARGETS;
-    }
+    } while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr);
+
     m_slv_arb_res[slv_id] = mst_id_rr;
     m_slv_begin_rsp_event[slv_id].notify();
 
