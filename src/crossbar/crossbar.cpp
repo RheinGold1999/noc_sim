@@ -45,7 +45,7 @@ CROSSBAR::CrossBar(const sc_module_name& name, const sc_time& period) :
   }
 
   // ---------------------------------------------------------------------------
-  // Register the sockets
+  // Register sockets
   // ---------------------------------------------------------------------------
   for (int i = 0; i < NR_OF_INITIATORS; ++i) {
     target_sockets[i].register_nb_transport_fw(this, &CrossBar::nb_transport_fw, i);
@@ -59,7 +59,7 @@ CROSSBAR::CrossBar(const sc_module_name& name, const sc_time& period) :
   }
 
   // ---------------------------------------------------------------------------
-  // Register the SystemC thread
+  // Register SystemC threads
   // ---------------------------------------------------------------------------
   std::ostringstream os;
   for (int slv_id = 0; slv_id < NR_OF_INITIATORS; ++slv_id) {
@@ -122,14 +122,16 @@ CROSSBAR::request_thread(int mst_id)
     // m_slv_req_buf[slv_id][mst_id] should be released, and 
     // m_slv_req_stall[slv_id][mst_id] should be checked.
     m_slv_req_buf[slv_id][mst_id] = nullptr;
-    transaction_type* stalled_trans = m_slv_req_stall[slv_id][mst_id];
-    if (stalled_trans != nullptr) {
+    // If there is a stalled req, tell the upstream that it has been received.
+    transaction_type* stalled_req = m_slv_req_stall[slv_id][mst_id];
+    if (stalled_req != nullptr) {
       phase_type p = tlm::END_REQ;
       sc_time t = sc_core::SC_ZERO_TIME;
-      sync_enum_type s = target_sockets[slv_id]->nb_transport_bw(*stalled_trans, p, t);
+      sync_enum_type s = target_sockets[slv_id]->nb_transport_bw(*stalled_req, p, t);
       sc_assert(s == tlm::TLM_ACCEPTED);
-      m_slv_req_buf[slv_id][mst_id] = stalled_trans;
+      m_slv_req_buf[slv_id][mst_id] = stalled_req;
       m_slv_req_stall[slv_id][mst_id] = nullptr;
+      m_mst_req_arb_event_que[mst_id].notify();
     }
   }
 }
@@ -173,18 +175,18 @@ CROSSBAR::response_thread(int slv_id)
     // m_mst_rsp_buf[mst_id][slv_id] should be released, and
     // m_mst_rsp_stall[mst_id][slv_id] should be checked.
     m_mst_rsp_buf[mst_id][slv_id] == nullptr;
-    // If there is stalled rsp, tell the downstream it has been received.
-    transaction_type* stalled_trans = m_mst_rsp_stall[mst_id][slv_id];
-    if (stalled_trans != nullptr) {
+    // If there is stalled rsp, tell the downstream that it has been received.
+    transaction_type* stalled_rsp = m_mst_rsp_stall[mst_id][slv_id];
+    if (stalled_rsp != nullptr) {
       phase_type p = tlm::END_RESP;
       sc_time t = sc_core::SC_ZERO_TIME;
-      sync_enum_type s = initiator_sockets[mst_id]->nb_transport_fw(*stalled_trans, p, t);
+      sync_enum_type s = initiator_sockets[mst_id]->nb_transport_fw(*stalled_rsp, p, t);
       sc_assert(s == tlm::TLM_COMPLETED);
-      m_mst_rsp_buf[mst_id][slv_id] = stalled_trans;
+      m_mst_rsp_buf[mst_id][slv_id] = stalled_rsp;
       m_mst_rsp_stall[mst_id][slv_id] = nullptr;
+      m_slv_rsp_arb_event_que[slv_id].notify();
     }
   }
-  
 }
 
 TEMPLATE
@@ -252,7 +254,6 @@ CROSSBAR::nb_transport_fw(
       return tlm::TLM_ACCEPTED;
     }
   } else if (phase == tlm::END_RESP) {
-    // TODO: implement the backward path
     auto it = m_pending_trans_map.find(&trans);
     sc_assert(it != m_pending_trans_map.end());
     m_pending_trans_map.erase(it);
