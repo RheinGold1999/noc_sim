@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "crossbar/crossbar.h"
 
 using namespace sc_core;
@@ -22,6 +24,9 @@ CROSSBAR::CrossBar(const sc_module_name& name, const sc_time& period) :
   sc_module(name),
   m_period(period)
 {
+  sc_assert(NR_OF_INITIATORS > 0);
+  sc_assert(NR_OF_TARGETS > 0);
+
   // ---------------------------------------------------------------------------
   // Initialize all the buffers (implemented as transaction pointer arrays)
   // ---------------------------------------------------------------------------
@@ -56,10 +61,26 @@ CROSSBAR::CrossBar(const sc_module_name& name, const sc_time& period) :
   // ---------------------------------------------------------------------------
   // Register the SystemC thread
   // ---------------------------------------------------------------------------
-  SC_THREAD(request_thread);
-  SC_THREAD(response_thread);
-  SC_THREAD(req_arb_thread);
-  SC_THREAD(rsp_arb_thread);
+  std::ostringstream os;
+  for (int slv_id = 0; slv_id < NR_OF_INITIATORS; ++slv_id) {
+    os.str("");
+    os << "response_thread_" << slv_id;
+    sc_spawn(sc_bind(&CrossBar::response_thread, this, slv_id), os.str().c_str());
+    
+    os.str("");
+    os << "rsp_arb_thread_" << slv_id;
+    sc_spawn(sc_bind(&CrossBar::rsp_arb_thread, this, slv_id), os.str().c_str());
+  }
+
+  for (int mst_id = 0; mst_id < NR_OF_TARGETS; ++mst_id) {
+    os.str("");
+    os << "request_thread_" << mst_id;
+    sc_spawn(sc_bind(&CrossBar::request_thread, this, mst_id), os.str().c_str());
+    
+    os.str("");
+    os << "req_arb_thread_" << mst_id;
+    sc_spawn(sc_bind(&CrossBar::req_arb_thread, this, mst_id), os.str().c_str());
+  }
 }
 
 TEMPLATE
@@ -170,7 +191,7 @@ TEMPLATE
 void
 CROSSBAR::req_arb_thread(int mst_id)
 {
-  static uint8_t slv_id_rr = 0;
+  static uint16_t slv_id_rr = 0;
 
   while (true) {
     wait(m_mst_req_arb_event_que[mst_id]);
@@ -189,7 +210,7 @@ TEMPLATE
 void
 CROSSBAR::rsp_arb_thread(int slv_id)
 {
-  static uint8_t mst_id_rr = 0;
+  static uint16_t mst_id_rr = 0;
   
   while (true) {
     wait(m_slv_rsp_arb_event_que[slv_id]);
