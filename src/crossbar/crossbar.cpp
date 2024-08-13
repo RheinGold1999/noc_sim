@@ -97,7 +97,7 @@ CROSSBAR::request_thread(int mst_id)
   while (true) {
     wait(m_mst_begin_req_event[mst_id]);  // triggered in req_arb_thread(mst_id)
 
-    int slv_id = m_mst_arb_res[mst_id];
+    int slv_id = m_mst_req_arb_res[mst_id];
     transaction_type* trans = m_slv_req_buf[slv_id][mst_id];
     sc_assert(trans != nullptr);
     phase_type phase = tlm::BEGIN_REQ;
@@ -109,7 +109,7 @@ CROSSBAR::request_thread(int mst_id)
       // The req has not been recevied yet by the downstream, needs to
       // wait nb_transport_bw call with phase END_REQ
       sc_assert(phase == tlm::BEGIN_REQ);
-      wait(m_mst_end_req_event[mst_id]);  // notified by nb_transport_bw
+      wait(m_mst_end_req_event[mst_id]);  // notified by the downstream
     } else if (status == tlm::TLM_UPDATED) {
       // The req has been received by the downstream
       sc_assert(phase == tlm::END_REQ);
@@ -146,7 +146,7 @@ CROSSBAR::response_thread(int slv_id)
   while (true) {
     wait(m_slv_begin_rsp_event[slv_id]);  // triggered in rsp_arb_thread(slv_id)
 
-    int mst_id = m_slv_arb_res[slv_id];
+    int mst_id = m_slv_rsp_arb_res[slv_id];
     transaction_type* trans = m_mst_rsp_buf[mst_id][slv_id];
     sc_assert(trans != nullptr);
     phase_type phase = tlm::BEGIN_RESP;
@@ -158,7 +158,7 @@ CROSSBAR::response_thread(int slv_id)
       // The rsp has not been received yet by the upstream, needs to
       // wait nb_transport_fw call with phase END_RESP
       sc_assert(phase == tlm::BEGIN_RESP);
-      wait(m_slv_end_rsp_event[slv_id]);  // notified by nb_transport_fw
+      wait(m_slv_end_rsp_event[slv_id]);  // notified by the upstream
     } else if (status == tlm::TLM_COMPLETED) {
       // The rsp has been received by the upstream
       sc_assert(phase == tlm::END_REQ);
@@ -203,7 +203,7 @@ CROSSBAR::req_arb_thread(int mst_id)
       slv_id_rr = (slv_id_rr + 1) % NR_OF_INITIATORS;
     } while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr);
 
-    m_mst_arb_res[mst_id] = slv_id_rr;
+    m_mst_req_arb_res[mst_id] = slv_id_rr;
     m_mst_begin_req_event[mst_id].notify();
 
     wait(m_period);
@@ -224,7 +224,7 @@ CROSSBAR::rsp_arb_thread(int slv_id)
       mst_id_rr = (mst_id_rr + 1) % NR_OF_TARGETS;
     } while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr);
 
-    m_slv_arb_res[slv_id] = mst_id_rr;
+    m_slv_rsp_arb_res[slv_id] = mst_id_rr;
     m_slv_begin_rsp_event[slv_id].notify();
 
     wait(m_period);
@@ -237,7 +237,7 @@ CROSSBAR::nb_transport_fw(
   int slv_id,
   transaction_type& trans,
   phase_type& phase,
-  sc_time& t
+  sc_time& time
 )
 {
   if (phase == tlm::BEGIN_REQ) {
@@ -278,7 +278,7 @@ CROSSBAR::nb_transport_bw(
   int mst_id,
   transaction_type& trans,
   phase_type& phase,
-  sc_time& t
+  sc_time& time
 )
 {
   auto it = m_pending_trans_map.find(&trans);

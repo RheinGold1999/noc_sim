@@ -56,14 +56,14 @@ private:
     int initiator_id,
     transaction_type& trans,
     phase_type& phase,
-    sc_core::sc_time& t
+    sc_core::sc_time& time
   );
 
   sync_enum_type nb_transport_bw(
     int target_id,
     transaction_type& trans,
     phase_type& phase,
-    sc_core::sc_time& t
+    sc_core::sc_time& time
   );
 
   unsigned int transport_dbg(int initiator_id, transaction_type& trans);
@@ -87,19 +87,87 @@ private:
 
   std::map<transaction_type*, ConnectionInfo> m_pending_trans_map;
 
+  /** 
+   * @brief: Store requests from the upstream in slave side, each slave 
+   *         has a unique slot for a single destination (master).
+  */
   transaction_type* m_slv_req_buf[NR_OF_INITIATORS][NR_OF_TARGETS];
+
+  /**
+   * @brief: Store requests that are stalled currently (without ready 
+   *         asserted), just for the purpose of notifying the corresponding 
+   *         upstream that the request can be received now (i.e. 
+   *         asserting ready).
+   */
   transaction_type* m_slv_req_stall[NR_OF_INITIATORS][NR_OF_TARGETS];
+
+  /**
+   * @brief: Store response from the downstream in master side, each master
+   *         has a unique slot for a single destination (slave).
+   */
   transaction_type* m_mst_rsp_buf[NR_OF_TARGETS][NR_OF_INITIATORS];
+
+  /**
+   * @brief: Store responses that are stalled currently (without ready
+   *         asserted), just for the purpose of notifying the corresponding
+   *         downstream that the response can be received now (i.e. 
+   *         asserting ready).
+   */
   transaction_type* m_mst_rsp_stall[NR_OF_TARGETS][NR_OF_INITIATORS];
 
+  /**
+   * @brief: Used to notify the arbiter for a given slave that there
+   *         is response coming from the downstream, and the arbiter 
+   *         should pick one to relay to the upstream.
+   */
   sc_core::sc_event_queue m_slv_rsp_arb_event_que[NR_OF_INITIATORS];
+
+  /**
+   * @brief: Used to notify the arbiter for a given master taht there
+   *         is request coming from the upstream, and the arbiter
+   *         should pick one to relay to the downstream.
+   */
   sc_core::sc_event_queue m_mst_req_arb_event_que[NR_OF_TARGETS];
+
+  /**
+   * @brief: Used to notify the slave that it can send response
+   *         to the corresponding upstream. The event is triggered
+   *         by the related response arbiter.
+   */
   sc_core::sc_event m_slv_begin_rsp_event[NR_OF_INITIATORS];
+
+  /**
+   * @brief: Used to notify the slave that the stalled response
+   *         has been received by the corresponding upstream, so 
+   *         that the slave can proceed sending response.
+   */
   sc_core::sc_event m_slv_end_rsp_event[NR_OF_INITIATORS];
+
+  /**
+   * @brief: Used to notify the master that is can send request
+   *         to the corresponding downstream. The event is triggered
+   *         by the related request arbiter.
+   */
   sc_core::sc_event m_mst_begin_req_event[NR_OF_TARGETS];
+
+  /**
+   * @brief: Used to notify the master that the stalled request
+   *         has been received by the corresponding downstream,
+   *         so that the master can proceed sending request.
+   */
   sc_core::sc_event m_mst_end_req_event[NR_OF_TARGETS];
-  int m_slv_arb_res[NR_OF_INITIATORS];
-  int m_mst_arb_res[NR_OF_TARGETS];
+
+  /**
+   * @brief: Store the mst_id selected by the response arbiter for 
+   *         a given slave.
+   */
+  int m_slv_rsp_arb_res[NR_OF_INITIATORS];
+
+  /**
+   * @brief: Store the slv_id selected by the request arbiter for 
+   *         a given master.
+   */
+  int m_mst_req_arb_res[NR_OF_TARGETS];
 };
 
 #endif /* __CROSSBAR_H__ */
