@@ -334,7 +334,7 @@ TEMPLATE
 void
 CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
-  // A simple address map, can used other types, e.g. interleave address map
+  // A simple address map, can also use other types, e.g. interleave address map
   uint64 ori_addr = trans.get_address();
   if (0 <= ori_addr && ori_addr < 0x1000) {
     connect_info.mst_id = 0;

@@ -1,9 +1,9 @@
 #ifndef __CROSSBAR_H__
 #define __CROSSBAR_H__
 
-#include <tlm>
 #include <set>
 
+#include <tlm>
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
 
@@ -52,6 +52,9 @@ private:
    */
   void rsp_arb_thread(int slv_id);
 
+  // ---------------------------------------------------------------------------
+  // TLM-2.0 Interfaces
+  // ---------------------------------------------------------------------------
   sync_enum_type nb_transport_fw(
     int initiator_id,
     transaction_type& trans,
