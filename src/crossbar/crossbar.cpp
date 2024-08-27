@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "crossbar/crossbar.h"
+#include "crossbar/addr_decoder.h"
 
 using namespace sc_core;
 using namespace sc_dt;
@@ -335,38 +336,26 @@ void
 CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
   // A simple address map, can also use other types, e.g. interleave address map
-  uint64 ori_addr = trans.get_address();
-  if (0 <= ori_addr && ori_addr < 0x1000) {
-    connect_info.mst_id = 0;
-    connect_info.map_addr = ori_addr;
-  } else if (0x1000'0000 <= ori_addr && ori_addr < 0x2000'0000) {
-    connect_info.mst_id = 1;
-    connect_info.map_addr = ori_addr - 0x1000'0000;
-  } else if (0x2000'0000 <= ori_addr && ori_addr < 0x3000'0000) {
-    connect_info.mst_id = 2;
-    connect_info.map_addr = ori_addr - 0x2000'0000;
-  } else if (0x3000'0000 <= ori_addr && ori_addr < 0x4000'0000) {
-    connect_info.mst_id = 3;
-    connect_info.map_addr = ori_addr - 0x3000'0000;
-  } else if (0x4000'0000 <= ori_addr && ori_addr < 0x5000'0000) {
-    connect_info.mst_id = 4;
-    connect_info.map_addr = ori_addr - 0x4000'0000;
-  } else if (0x5000'0000 <= ori_addr && ori_addr < 0x6000'0000) {
-    connect_info.mst_id = 5;
-    connect_info.map_addr = ori_addr - 0x5000'0000;
-  } else if (0x6000'0000 <= ori_addr && ori_addr < 0x7000'0000) {
-    connect_info.mst_id = 6;
-    connect_info.map_addr = ori_addr - 0x6000'0000;
-  } else if (0x7000'0000 <= ori_addr && ori_addr < 0x8000'0000) {
-    connect_info.mst_id = 7;
-    connect_info.map_addr = ori_addr - 0x7000'0000;
-  } else if (0x8000'0000 <= ori_addr && ori_addr < 0x9000'0000) {
-    connect_info.mst_id = 8;
-    connect_info.map_addr = ori_addr - 0x8000'0000;
-  } else {
-    connect_info.mst_id = 9;
-    connect_info.map_addr = ori_addr - 0x9000'0000;
-  }
+  static const AddrDecoder addr_decoder(
+    /* addr_map_rule_vector */
+    {
+      AddrMapRule(0x0000'0000, 0x1000'0000, 0),
+      AddrMapRule(0x1000'0000, 0x2000'0000, 1),
+      AddrMapRule(0x2000'0000, 0x3000'0000, 2),
+      AddrMapRule(0x3000'0000, 0x4000'0000, 3),
+      AddrMapRule(0x4000'0000, 0x5000'0000, 5),
+      AddrMapRule(0x5000'0000, 0x6000'0000, 6),
+      AddrMapRule(0x6000'0000, 0x7000'0000, 7),
+      AddrMapRule(0x7000'0000, 0x8000'0000, 8),
+      AddrMapRule(0x8000'0000, 0x9000'0000, 9),
+      AddrMapRule(0x9000'0000, UINT64_MAX, 10),
+    }
+  );
+
+  uint64_t ori_addr = (uint64_t)trans.get_address();
+  AddrMapRule matched_rule = addr_decoder.get_matched_rule(ori_addr);
+  connect_info.mst_id = matched_rule.id;
+  connect_info.map_addr = ori_addr - matched_rule.start_addr;
 }
 
 
