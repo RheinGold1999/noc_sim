@@ -10,13 +10,16 @@ class crossbar_if;
 class crossbar_slave_monitor : public uvm::uvm_monitor
 {
 public:
+  // connected to vif
   uvm::uvm_blocking_get_port<crossbar_transfer> req_get_port{"req_get_port"};
   uvm::uvm_blocking_get_port<crossbar_transfer> rsp_get_port{"rsp_get_port"};
 
+  // connected to scoreboard
   uvm::uvm_analysis_port<crossbar_transfer> req_ap{"req_ap"};
   uvm::uvm_analysis_port<crossbar_transfer> rsp_ap{"rsp_ap"};
 
-  uvm::uvm_blocking_peek_export<crossbar_transfer> req_peek_export;
+  // connected to slave sequencer
+  uvm::uvm_blocking_get_export<crossbar_transfer> req_get_export;
 
 public:
   crossbar_slave_monitor(const uvm::uvm_component_name& name);

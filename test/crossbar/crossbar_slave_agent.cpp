@@ -30,7 +30,7 @@ crossbar_slave_agent::connect_phase(uvm_phase& phase)
 {
   if (get_is_active() == UVM_ACTIVE) {
     drv->seq_item_port.connect(sqr->seq_item_export);
-    sqr->req_peek_port.connect(mon->req_peek_export);
+    sqr->req_get_port.connect(mon->req_get_export);
   }
 }
 

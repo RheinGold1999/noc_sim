@@ -7,7 +7,7 @@ using namespace sc_core;
 crossbar_slave_monitor::crossbar_slave_monitor(const uvm_component_name& name)
 : uvm_monitor(name)
 {
-  req_peek_export.bind(req_fifo);
+  req_get_export.bind(req_fifo);
 }
 
 void
