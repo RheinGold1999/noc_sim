@@ -5,7 +5,6 @@
 #include <tlm>
 #include <uvm>
 #include "tlm_utils/simple_initiator_socket.h"
-#include "tlm_utils/simple_target_socket.h"
 
 #include "crossbar_transfer.h"
 
@@ -16,19 +15,16 @@ class crossbar_master_driver : public uvm::uvm_driver<crossbar_transfer>
 public:
   tlm_utils::simple_initiator_socket<crossbar_master_driver> initiator_socket;
 
-  crossbar_if* vif{nullptr};
-
 public:
-  UVM_COMPONENT_UTILS(crossbar_master_driver);
-
   crossbar_master_driver(const uvm::uvm_component_name& name);
+
+  UVM_COMPONENT_UTILS(crossbar_master_driver);
 
   void build_phase(uvm::uvm_phase& phase);
   void connect_phase(uvm::uvm_phase& phase);
   void run_phase(uvm::uvm_phase& phase);
 
-  void get_req();
-  void rcv_rsp();
+  void drive_req();
 
   //----------------------------------------------------------------------------
   // TLM2.0 Interface
@@ -40,15 +36,17 @@ public:
   );
  
 private:
-  sc_core::sc_event_queue req_end_ev_que;
-  sc_core::sc_event_queue rsp_start_ev_que;
+  crossbar_if* vif{nullptr};
+
+  sc_core::sc_event req_end_ev{"req_end_ev"};
+  sc_core::sc_event rsp_start_ev{"rsp_start_ev"};
 
   int mst_id;
 
   crossbar_transfer req{"req"};
   crossbar_transfer rsp{"rsp"};
 
-  std::map<tlm::tlm_generic_payload*, >
+  std::map<tlm::tlm_generic_payload*, crossbar_transfer> m_gp_req_map;
 };
 
 #endif /* __CROSSBAR_MASTER_DRIVER_H__ */

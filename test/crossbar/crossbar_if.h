@@ -24,9 +24,14 @@ public:
   target_socket_type    target_socket{"target_socket"};
   initiator_socket_type initiator_socket{"initiator_socket"};
 
-  uvm::uvm_nonblocking_put_port<crossbar_transfer> req_put_port{"req_put_port"};
-  uvm::uvm_nonblocking_put_port<crossbar_transfer> rsp_put_port{"rsp_put_port"};
+  uvm::uvm_blocking_get_export<crossbar_transfer> req_get_export{"req_get_export"};
+  uvm::uvm_blocking_get_export<crossbar_transfer> rsp_get_export{"rsp_get_export"};
 
+private:
+  tlm::tlm_fifo<crossbar_transfer> req_fifo{"req_fifo", 128};
+  tlm::tlm_fifo<crossbar_transfer> rsp_fifo{"rsp_fifo", 128};
+
+public:
   crossbar_if(sc_core::sc_module_name name);
 
   sync_enum_type nb_transport_fw(

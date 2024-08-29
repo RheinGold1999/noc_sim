@@ -121,6 +121,13 @@ crossbar_transfer::convert2string() const
   return str.str();
 }
 
+crossbar_transfer&
+crossbar_transfer::operator=(const crossbar_transfer& rhs)
+{
+  do_copy(rhs);
+  return *this;
+}
+
 void
 crossbar_transfer::init_by_gp(const tlm::tlm_generic_payload& gp)
 {

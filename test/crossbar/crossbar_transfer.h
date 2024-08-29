@@ -28,7 +28,7 @@ public:
 
   UVM_OBJECT_UTILS(crossbar_transfer);
 
-  crossbar_transfer(const std::string& name);
+  crossbar_transfer(const std::string& name = "xbar_transfer");
   virtual void do_print(const uvm::uvm_printer& printer) const;
   virtual void do_pack(uvm::uvm_packer& p) const;
   virtual void do_unpack(uvm::uvm_packer& p);
@@ -40,6 +40,8 @@ public:
   ) const;
 
   std::string convert2string() const;
+
+  crossbar_transfer& operator=(const crossbar_transfer& rhs);
 
   void init_by_gp(const tlm::tlm_generic_payload& trans);
   void copy_to_gp(tlm::tlm_generic_payload& trans);

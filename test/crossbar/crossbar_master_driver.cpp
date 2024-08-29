@@ -1,5 +1,8 @@
 #include "crossbar_master_driver.h"
+#include "crossbar_master_monitor.h"
+#include "crossbar_master_sequencer.h"
 #include "crossbar_if.h"
+#include "tlm_gp_mm.h"
 
 using namespace std;
 using namespace sc_core;
@@ -42,36 +45,27 @@ void
 crossbar_master_driver::run_phase(uvm_phase& phase)
 {
   SC_FORK
-    sc_spawn(sc_bind(&crossbar_master_driver::get_req, this)),
-    sc_spawn(sc_bind(&crossbar_master_driver::rcv_rsp, this))
+    sc_spawn(sc_bind(&crossbar_master_driver::drive_req, this))
   SC_JOIN
 }
 
 void
-crossbar_master_driver::get_req()
+crossbar_master_driver::drive_req()
 {
-  tlm_generic_payload gp;
-
   while (true) {
     this->seq_item_port.get_next_item(req);
-    req.copy_to_gp(gp);
-    
+    tlm_generic_payload* gp = tlm_gp_mm::instance().allocate();
+    req.copy_to_gp(*gp);
+    m_gp_req_map[gp] = req;
+
     tlm_phase phase = BEGIN_REQ;
     sc_time delay = SC_ZERO_TIME;
-    initiator_socket->nb_transport_fw(gp, phase, delay);
+    initiator_socket->nb_transport_fw(*gp, phase, delay);
     if (phase == BEGIN_REQ) {
-      wait(req_end_ev_que);
+      wait(req_end_ev);
     }
 
     this->seq_item_port.item_done();
-  }
-}
-
-void
-crossbar_master_driver::rcv_rsp()
-{
-  while (true) {
-    wait(rsp_start_ev_que);
   }
 }
 
@@ -84,14 +78,19 @@ crossbar_master_driver::nb_transport_bw(
 {
   tlm_sync_enum ret_status = TLM_ACCEPTED;
   if (phase == END_REQ) {
-    req_end_ev_que.notify();
+    req_end_ev.notify();
   } else if (phase == BEGIN_RESP) {
     phase = END_RESP;
     ret_status = TLM_COMPLETED;
     rsp.init_by_gp(gp);
-    rsp_start_ev_que.notify();
+    sc_assert(m_gp_req_map.find(&gp) != m_gp_req_map.end());
+    rsp.set_id_info(m_gp_req_map[&gp]);
+    m_gp_req_map.erase(&gp);
+    gp.release();
+    this->seq_item_port.put_response(rsp);
+    // rsp_start_ev.notify();
   } else {
-    UVM_FATAL("nb_transport_bw", "Wrong phase");
+    UVM_FATAL("WRONG_TLM_PHASE", phase.get_name());
   }
 
   return ret_status;
