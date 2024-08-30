@@ -27,7 +27,10 @@ crossbar_master_monitor::build_phase(uvm_phase& phase)
 void
 crossbar_master_monitor::connect_phase(uvm_phase& phase)
 {
-  assert(vif);
+  if (vif == nullptr) {
+    UVM_FATAL("VIF_IS_NULL", "vif is not set for: "
+      + get_full_name());
+  }
   req_get_port.bind(vif->req_get_export);
   rsp_get_port.bind(vif->rsp_get_export);
 }

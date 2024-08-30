@@ -21,6 +21,8 @@ crossbar_scoreboard::crossbar_scoreboard(const uvm_component_name& name)
 void
 crossbar_scoreboard::build_phase(uvm_phase& phase)
 {
+  uvm_scoreboard::build_phase(phase);
+
   if (!uvm_config_db<int>::get(this, "", "num_mst", num_mst)) {
     UVM_FATAL("NUM_MST_NOT_SET", "num_mst not set for: "
       + get_full_name());
@@ -36,19 +38,19 @@ crossbar_scoreboard::build_phase(uvm_phase& phase)
   // build fifo arrays based on num_mst and num_slv
   for (int i = 0; i < num_mst; ++i) {
     char fifo_name[50];
-    sprintf(fifo_name, "mst_req_collected_fifo_[%d]", i);
+    sprintf(fifo_name, "mst_req_collected_fifos[%d]", i);
     mst_req_collected_fifos.emplace_back(analysis_fifo_type{fifo_name});
 
-    sprintf(fifo_name, "mst_rsp_collected_fifo_[%d]", i);
+    sprintf(fifo_name, "mst_rsp_collected_fifos[%d]", i);
     mst_rsp_collected_fifos.emplace_back(analysis_fifo_type{fifo_name});
   }
 
   for (int i = 0; i < num_slv; ++i) {
     char fifo_name[50];
-    sprintf(fifo_name, "slv_req_collected_fifo_[%d]", i);
+    sprintf(fifo_name, "slv_req_collected_fifos[%d]", i);
     slv_req_collected_fifos.emplace_back(analysis_fifo_type{fifo_name});
 
-    sprintf(fifo_name, "slv_rsp_collected_fifo_[%d]", i);
+    sprintf(fifo_name, "slv_rsp_collected_fifos[%d]", i);
     slv_rsp_collected_fifos.emplace_back(analysis_fifo_type{fifo_name});
   }
 }

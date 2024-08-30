@@ -23,6 +23,10 @@ crossbar_slave_agent::build_phase(uvm_phase& phase)
     drv = crossbar_slave_driver::type_id::create("drv", this);
     assert(drv);
   }
+
+  if (!uvm_config_db<int>::get(this, "", "mst_id", slv_id)) {
+    UVM_FATAL("NO_SLV_ID", "slv_id not set for: " + get_full_name());
+  }
 }
 
 void

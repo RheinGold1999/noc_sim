@@ -19,6 +19,10 @@ void
 crossbar_master_agent::build_phase(uvm_phase& phase)
 {
   uvm_agent::build_phase(phase);
+  
+  if (!uvm_config_db<int>::get(this, "", "mst_id", mst_id)) {
+    UVM_FATAL("NO_MST_ID", "mst_id not set for: " + get_full_name());
+  }
 
   mon = crossbar_master_monitor::type_id::create("mon", this);
   assert(mon);

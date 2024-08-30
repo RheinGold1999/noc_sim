@@ -39,6 +39,7 @@ public:
 private:
   int num_mst;
   int num_slv;
+
   std::map<uint64_t, uint8_t> mem_expected;
   std::map<uint64_t, int> req_id_slv_id_map;
   std::map<uint64_t, int> rsp_id_mst_id_map;
