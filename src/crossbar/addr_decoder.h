@@ -25,4 +25,6 @@ private:
   std::vector<AddrMapRule> m_map_rule_vec;
 };
 
+extern AddrDecoder g_default_addr_decoder;
+
 #endif /* __ADDR_DECODER_H__ */

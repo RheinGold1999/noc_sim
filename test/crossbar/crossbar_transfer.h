@@ -20,12 +20,18 @@ class crossbar_transfer : public uvm::uvm_sequence_item
   using uvm_sequence_item::uvm_report_error;
   using uvm_sequence_item::uvm_report_fatal;
 
+  // declare all master seq as friend class
+  friend class read_word_seq;
+  friend class write_word_seq;
+
 public:
+  uint64_t id;  // like AXI ID, assigned by master only
   crossbar_transfer_cmd_e cmd;
   uint64_t addr;
   std::vector<uint8_t> data;
   size_t size() const;
 
+public:
   UVM_OBJECT_UTILS(crossbar_transfer);
 
   crossbar_transfer(const std::string& name = "xbar_transfer");
@@ -45,6 +51,9 @@ public:
 
   void init_by_gp(const tlm::tlm_generic_payload& trans);
   void copy_to_gp(tlm::tlm_generic_payload& trans);
+
+private:
+  static uint64_t alloc_id();
 };
 
 #endif /* __CROSSBAR_TRANSFER_H__ */

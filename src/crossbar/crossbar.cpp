@@ -335,25 +335,8 @@ TEMPLATE
 void
 CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
-  // A simple address map, can also use other types, e.g. interleave address map
-  static const AddrDecoder addr_decoder(
-    /* addr_map_rule_vector */
-    {
-      AddrMapRule(0x0000'0000, 0x1000'0000, 0),
-      AddrMapRule(0x1000'0000, 0x2000'0000, 1),
-      AddrMapRule(0x2000'0000, 0x3000'0000, 2),
-      AddrMapRule(0x3000'0000, 0x4000'0000, 3),
-      AddrMapRule(0x4000'0000, 0x5000'0000, 5),
-      AddrMapRule(0x5000'0000, 0x6000'0000, 6),
-      AddrMapRule(0x6000'0000, 0x7000'0000, 7),
-      AddrMapRule(0x7000'0000, 0x8000'0000, 8),
-      AddrMapRule(0x8000'0000, 0x9000'0000, 9),
-      AddrMapRule(0x9000'0000, UINT64_MAX, 10),
-    }
-  );
-
   uint64_t ori_addr = (uint64_t)trans.get_address();
-  AddrMapRule matched_rule = addr_decoder.get_matched_rule(ori_addr);
+  AddrMapRule matched_rule = g_default_addr_decoder.get_matched_rule(ori_addr);
   connect_info.mst_id = matched_rule.id;
   connect_info.map_addr = ori_addr - matched_rule.start_addr;
 }

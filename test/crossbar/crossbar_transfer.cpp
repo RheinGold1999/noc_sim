@@ -9,6 +9,7 @@ const char* crossbar_transfer_cmd_str[] = {
 
 crossbar_transfer::crossbar_transfer(const std::string& name)
 : uvm::uvm_sequence_item(name)
+, id(0)
 , cmd(NOP)
 , addr(0)
 , data(std::vector<uint8_t>())
@@ -25,6 +26,7 @@ crossbar_transfer::size() const
 void
 crossbar_transfer::do_print(const uvm::uvm_printer& printer) const
 {
+  printer.print_field_int("id", id);
   printer.print_string("cmd", crossbar_transfer_cmd_str[cmd]);
   printer.print_field_int("addr", addr);
   printer.print_field_int("size", size());
@@ -39,6 +41,7 @@ crossbar_transfer::do_print(const uvm::uvm_printer& printer) const
 void
 crossbar_transfer::do_pack(uvm::uvm_packer& p) const
 {
+  p << id;
   p << addr;
   p << (int)cmd;
   p << size();
@@ -51,8 +54,9 @@ crossbar_transfer::do_pack(uvm::uvm_packer& p) const
 void
 crossbar_transfer::do_unpack(uvm::uvm_packer& p)
 {
-  int tmp_cmd;
+  p >> id;
   p >> addr;
+  int tmp_cmd;
   p >> tmp_cmd;
   cmd = (crossbar_transfer_cmd_e)tmp_cmd;
   std::size_t tmp_size;
@@ -73,6 +77,7 @@ crossbar_transfer::do_copy(const uvm::uvm_object& rhs)
     UVM_FATAL("DO_COPY", "Object not of type crossbar_transfer");
   }
 
+  id = drhs->id;
   cmd = drhs->cmd;
   addr = drhs->addr;
   
@@ -94,7 +99,7 @@ crossbar_transfer::do_compare(
     UVM_FATAL("DO_COMPARE", "Object not of type crossbar_transfer");
   }
 
-  if (cmd != drhs->cmd || addr != drhs->addr || size() != drhs->size()) {
+  if (id != drhs->id || cmd != drhs->cmd || addr != drhs->addr || size() != drhs->size()) {
     return false;
   }
 
@@ -111,6 +116,7 @@ std::string
 crossbar_transfer::convert2string() const
 {
   std::ostringstream str;
+  str << "id: " << id;
   str << "cmd: " << crossbar_transfer_cmd_str[cmd];
   str << "addr: " << addr;
   str << "size: " << size();
@@ -124,6 +130,10 @@ crossbar_transfer::convert2string() const
 crossbar_transfer&
 crossbar_transfer::operator=(const crossbar_transfer& rhs)
 {
+  if (this == &rhs) {
+    return *this;
+  }
+  uvm::uvm_sequence_item::operator=(rhs);
   do_copy(rhs);
   return *this;
 }
@@ -154,5 +164,12 @@ crossbar_transfer::copy_to_gp(tlm::tlm_generic_payload& gp)
   gp.set_address(addr);
   gp.set_data_ptr(const_cast<uint8_t*>(data.data()));
   gp.set_data_length(size());
+}
+
+uint64_t
+crossbar_transfer::alloc_id()
+{
+  static uint64_t s_glb_id = 0;
+  return ++s_glb_id;
 }
 

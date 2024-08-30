@@ -58,6 +58,7 @@ public:
 
   virtual void body()
   {
+    req->id = crossbar_transfer::alloc_id();
     req->addr = rand() % 4;
     req->cmd = READ;
     req->data.resize(4);
@@ -100,6 +101,7 @@ public:
 
   virtual void body()
   {
+    req->id = crossbar_transfer::alloc_id();
     req->addr = rand() % 4;
     req->cmd = WRITE;
     req->data.resize(4);
