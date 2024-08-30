@@ -59,10 +59,10 @@ public:
 
   void report_phase(uvm::uvm_phase& phase)
   {
-    if(test_pass) {
-      UVM_INFO(get_type_name(), "** UVM TEST PASSED **", uvm::UVM_NONE);
+    if (test_pass) {
+      UVM_INFO(get_type_name(), "*** UVM TEST PASSED ***", uvm::UVM_NONE);
     } else {
-      UVM_ERROR(get_type_name(), "** UVM TEST FAIL **");
+      UVM_ERROR(get_type_name(), "*** UVM TEST FAILED ***");
     }
   }
 
