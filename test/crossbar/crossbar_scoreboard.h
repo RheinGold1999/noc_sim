@@ -36,6 +36,8 @@ public:
   void update_expected_mem(const crossbar_transfer& trans);
   void check_expected_mem(const crossbar_transfer& trans);
 
+  int get_err_num();
+
 private:
   int num_mst;
   int num_slv;

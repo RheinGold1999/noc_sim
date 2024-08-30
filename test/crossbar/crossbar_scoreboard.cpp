@@ -210,3 +210,9 @@ crossbar_scoreboard::slv_rsp_collect_thread(int slv_id)
     }
   }
 }
+
+int
+crossbar_scoreboard::get_err_num()
+{
+  return num_errors;
+}
