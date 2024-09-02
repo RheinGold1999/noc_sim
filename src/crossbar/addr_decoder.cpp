@@ -39,9 +39,11 @@ AddrDecoder g_default_addr_decoder = AddrDecoder(
     AddrMapRule(0x3000'0000, 0x4000'0000, 3),
     AddrMapRule(0x4000'0000, 0x5000'0000, 5),
     AddrMapRule(0x5000'0000, 0x6000'0000, 6),
-    AddrMapRule(0x6000'0000, 0x7000'0000, 7),
-    AddrMapRule(0x7000'0000, 0x8000'0000, 8),
-    AddrMapRule(0x8000'0000, 0x9000'0000, 9),
-    AddrMapRule(0x9000'0000, UINT64_MAX, 10),
+    AddrMapRule(0x6000'0000, UINT64_MAX,  7),
+
+    // AddrMapRule(0x6000'0000, 0x7000'0000, 7),
+    // AddrMapRule(0x7000'0000, 0x8000'0000, 8),
+    // AddrMapRule(0x8000'0000, 0x9000'0000, 9),
+    // AddrMapRule(0x9000'0000, UINT64_MAX, 10),
   }
 );

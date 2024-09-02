@@ -3,15 +3,17 @@
 #include <uvm>
 
 #include "crossbar/crossbar.h"
+#include "vip/crossbar_if.h"
 #include "crossbar_test_lib.h"
-#include "crossbar_if.h"
 
 int sc_main(int, char**)
 {
   constexpr int NUM_MST = 4;
   constexpr int NUM_SLV = 8;
 
-  CrossBar<NUM_MST, NUM_SLV> dut("dut", sc_core::sc_time(1, sc_core::SC_NS));
+  sc_core::sc_time period{1, sc_core::SC_NS};
+  CrossBar<NUM_MST, NUM_SLV> dut("dut", period);
+  // CrossBar<NUM_MST, NUM_SLV> dut("dut", sc_core::sc_time(1, sc_core::SC_NS));
 
   std::array<crossbar_if*, NUM_MST> mst_vifs;
   std::array<crossbar_if*, NUM_SLV> slv_vifs;
@@ -37,7 +39,7 @@ int sc_main(int, char**)
     char slv_name[20];
     std::sprintf(slv_name, "slaves[%d]", i);
     uvm::uvm_config_db<crossbar_if*>::set(
-      uvm::uvm_root::get(), std::string("*.") + slv_name, "vif", mst_vifs[i]
+      uvm::uvm_root::get(), std::string("*.") + slv_name, "vif", slv_vifs[i]
     );
     dut.initiator_sockets[i].bind(slv_vifs[i]->target_socket);
   }
