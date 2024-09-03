@@ -21,13 +21,16 @@ public:
   typedef tlm_utils::simple_initiator_socket<crossbar_if> initiator_socket_type;
 
 public:
+  // connect to driver and DUT
   target_socket_type    target_socket{"target_socket"};
   initiator_socket_type initiator_socket{"initiator_socket"};
 
+  // connect to monitor
   uvm::uvm_blocking_get_export<crossbar_transfer> req_get_export{"req_get_export"};
   uvm::uvm_blocking_get_export<crossbar_transfer> rsp_get_export{"rsp_get_export"};
 
 private:
+  // connect to get_export
   tlm::tlm_fifo<crossbar_transfer> req_fifo{"req_fifo", 128};
   tlm::tlm_fifo<crossbar_transfer> rsp_fifo{"rsp_fifo", 128};
 
@@ -46,6 +49,11 @@ public:
     sc_core::sc_time& time
   );
 
+public:
+  std::string get_name();
+
+private:
+  std::string m_name;
 };
 
 #endif /* __CROSSBAR_IF_H__ */

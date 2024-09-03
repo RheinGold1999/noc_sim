@@ -11,9 +11,25 @@ int sc_main(int, char**)
   constexpr int NUM_MST = 4;
   constexpr int NUM_SLV = 8;
 
+  AddrDecoder* addr_dec = new AddrDecoder(
+    {
+      AddrMapRule(0x0000'0000, 0x1000'0000, 0),
+      AddrMapRule(0x1000'0000, 0x2000'0000, 1),
+      AddrMapRule(0x2000'0000, 0x3000'0000, 2),
+      AddrMapRule(0x3000'0000, 0x4000'0000, 3),
+      AddrMapRule(0x4000'0000, 0x5000'0000, 5),
+      AddrMapRule(0x5000'0000, 0x6000'0000, 6),
+      AddrMapRule(0x6000'0000, UINT64_MAX,  7),
+    }
+  );
+
   sc_core::sc_time period{1, sc_core::SC_NS};
-  CrossBar<NUM_MST, NUM_SLV> dut("dut", period);
+  CrossBar<NUM_MST, NUM_SLV> dut("dut", period, addr_dec);
   // CrossBar<NUM_MST, NUM_SLV> dut("dut", sc_core::sc_time(1, sc_core::SC_NS));
+
+  uvm::uvm_config_db<AddrDecoder*>::set(
+    uvm::uvm_root::get(), "*.tb.sbd", "addr_dec", addr_dec
+  );
 
   std::array<crossbar_if*, NUM_MST> mst_vifs;
   std::array<crossbar_if*, NUM_SLV> slv_vifs;
@@ -52,6 +68,8 @@ int sc_main(int, char**)
   for (int i = 0; i < NUM_SLV; ++i) {
     delete slv_vifs[i];
   }
+
+  delete addr_dec;
 
   return 0;
 }

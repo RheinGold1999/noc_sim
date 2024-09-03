@@ -40,6 +40,7 @@ private:
   crossbar_if* vif{nullptr};
   int slv_id;
   tlm::tlm_fifo<crossbar_transfer> req_fifo{"req_fifo", 128};
+  // tlm::tlm_fifo<crossbar_transfer> rsp_fifo{"rsp_fifo", 128};
 };
 
 #endif /* __CROSSBAR_SLAVE_MONITOR_H__ */

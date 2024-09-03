@@ -23,7 +23,8 @@ tlm_gp_mm::allocate()
     gp->set_auto_extension(trans_id);
   }
   gp->acquire();
-  std::cout << "gp alloc: id : " << get_id(gp) << std::endl;
+  std::cout << "gp alloc: id : " << get_id(gp) 
+            << ", ref_cnt : " << gp->get_ref_count() << std::endl;
   return gp;
 }
 
@@ -66,5 +67,6 @@ tlm_gp_mm::set_id(tlm::tlm_generic_payload* gp, trans_id_t id)
 {
   extension_trans_id* trans_id = gp->get_extension<extension_trans_id>();
   assert(trans_id);
+  std::cout << "change id from " << trans_id->m_trans_id << " to " << id << std::endl;
   trans_id->m_trans_id = id;
 }

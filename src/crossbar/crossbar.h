@@ -31,7 +31,11 @@ public:
   initiator_socket_type initiator_sockets[NR_OF_TARGETS];
 
 public:
-  CrossBar(const sc_core::sc_module_name& name, const sc_core::sc_time& period);
+  CrossBar(
+    const sc_core::sc_module_name& name, 
+    const sc_core::sc_time& period,
+    const AddrDecoder* addr_dec
+  );
   ~CrossBar();
 
 private:
@@ -93,12 +97,13 @@ private:
     int mst_id;
     sc_dt::uint64 map_addr;
   };
+
   void decode_addr(transaction_type& trans, ConnectionInfo& connect_info);
 
 private:
   sc_core::sc_time m_period;
-
   std::map<trans_id_t, ConnectionInfo> m_pending_trans_map;
+  const AddrDecoder* m_addr_dec;
 
   /** 
    * @brief Store requests from the upstream in slave side, each slave 
@@ -200,12 +205,18 @@ private:
   >
 
 TEMPLATE
-CROSSBAR::CrossBar(const sc_core::sc_module_name& name, const sc_core::sc_time& period) :
-  sc_module(name),
-  m_period(period)
+CROSSBAR::CrossBar(
+  const sc_core::sc_module_name& name, 
+  const sc_core::sc_time& period,
+  const AddrDecoder* addr_dec
+)
+: sc_module(name)
+, m_period(period)
+, m_addr_dec(addr_dec)
 {
   sc_assert(NR_OF_INITIATORS > 0);
   sc_assert(NR_OF_TARGETS > 0);
+  sc_assert(m_addr_dec);
 
   // ---------------------------------------------------------------------------
   // Initialize all the buffers (implemented as transaction pointer arrays)
@@ -346,7 +357,6 @@ CROSSBAR::response_thread(int slv_id)
       auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(trans));
       sc_assert(it != m_pending_trans_map.end());
       m_pending_trans_map.erase(it);
-      trans->release();
     } else {
       // status == tlm::TLM_UPDATED is not allowed
       sc_assert(false);
@@ -460,7 +470,6 @@ CROSSBAR::nb_transport_fw(
     auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(&trans));
     sc_assert(it != m_pending_trans_map.end());
     m_pending_trans_map.erase(it);
-    trans.release();
     m_slv_end_rsp_event[slv_id].notify(sc_core::SC_ZERO_TIME);
     return tlm::TLM_COMPLETED;
   } else {
@@ -503,11 +512,14 @@ CROSSBAR::nb_transport_bw(
     if (m_mst_rsp_buf[mst_id][slv_id] == nullptr) {
       m_mst_rsp_buf[mst_id][slv_id] = &trans;
       trans.acquire();
-      std::cout << " m_mst_rsp_buf[" << mst_id << "]"
+      std::cout << "gp_id: " << trans_id
+                << ", ref_cnt : " << trans.get_ref_count()
+                << std::endl;
+      std::cout << "m_mst_rsp_buf[" << mst_id << "]"
                 << "[" << slv_id << "] = " 
                 << m_mst_rsp_buf[mst_id][slv_id]
                 << std::endl;
-      phase == tlm::END_RESP;
+      phase = tlm::END_RESP;
       m_slv_rsp_arb_event_que[slv_id].notify(sc_core::SC_ZERO_TIME);
       std::cout << "gp_id: " << trans_id
                 << " end resp" 
@@ -517,7 +529,8 @@ CROSSBAR::nb_transport_bw(
       m_mst_rsp_stall[mst_id][slv_id] == &trans;
       trans.acquire();
       std::cout << "gp_id: " << trans_id
-                << " resp pending" 
+                << ", resp pending"
+                << ", ref_cnt : " << trans.get_ref_count()
                 << std::endl;
       return tlm::TLM_ACCEPTED;
     }
@@ -557,7 +570,7 @@ void
 CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
   uint64_t ori_addr = (uint64_t)trans.get_address();
-  AddrMapRule matched_rule = g_default_addr_decoder.get_matched_rule(ori_addr);
+  AddrMapRule matched_rule = m_addr_dec->get_matched_rule(ori_addr);
   std::cout << "ori_addr = 0x" << std::hex << ori_addr << ", mst_id = " << matched_rule.id << std::endl;
   connect_info.mst_id = matched_rule.id;
   connect_info.map_addr = ori_addr - matched_rule.start_addr;

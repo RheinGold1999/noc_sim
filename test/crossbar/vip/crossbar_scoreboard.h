@@ -8,6 +8,8 @@
 
 #include "crossbar_transfer.h"
 
+class AddrDecoder;
+
 class crossbar_scoreboard : public uvm::uvm_scoreboard
 {
   typedef tlm::tlm_analysis_fifo<crossbar_transfer> analysis_fifo_type;
@@ -40,6 +42,8 @@ public:
   int get_err_num();
 
 private:
+  AddrDecoder* m_addr_dec{nullptr};
+
   int num_mst;
   int num_slv;
 

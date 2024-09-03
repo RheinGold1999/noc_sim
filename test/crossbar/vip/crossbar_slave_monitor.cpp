@@ -50,7 +50,9 @@ crossbar_slave_monitor::collect_req()
   crossbar_transfer req{"req"};
   while (true) {
     req_get_port.get(req);
+    UVM_INFO("COLLECT_REQ", req.convert2string(), UVM_MEDIUM);
     req_ap.write(req);
+    // send to slave sequencer to generate response
     req_fifo.put(req);
   }
 }
@@ -61,6 +63,7 @@ crossbar_slave_monitor::collect_rsp()
   crossbar_transfer rsp{"rsp"};
   while (true) {
     rsp_get_port.get(rsp);
+    UVM_INFO("COLLECT_RSP", rsp.convert2string(), UVM_MEDIUM);
     rsp_ap.write(rsp);
   }
 }

@@ -63,12 +63,12 @@ public:
     req->cmd = READ;
     req->data.resize(4);
 
-    UVM_INFO("start req", req->convert2string(), uvm::UVM_MEDIUM);
+    UVM_INFO("START_REQ", req->convert2string(), uvm::UVM_MEDIUM);
     start_item(req);
     finish_item(req);
 
     get_response(rsp);
-    UVM_INFO("get rsp", rsp->convert2string(), uvm::UVM_MEDIUM);
+    UVM_INFO("GET_RSP", rsp->convert2string(), uvm::UVM_MEDIUM);
   }
 };
 

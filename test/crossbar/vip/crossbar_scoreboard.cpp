@@ -35,6 +35,12 @@ crossbar_scoreboard::build_phase(uvm_phase& phase)
   }
   sc_assert(num_slv > 0);
 
+  if (!uvm_config_db<AddrDecoder*>::get(this, "", "addr_dec", m_addr_dec)) {
+     UVM_FATAL("ADDR_DEC_NOT_SET", "addr_dec not set for: "
+      + get_full_name()); 
+  }
+  sc_assert(m_addr_dec);
+
   // build fifo arrays based on num_mst and num_slv
   for (int i = 0; i < num_mst; ++i) {
     char fifo_name[50];
@@ -123,10 +129,10 @@ crossbar_scoreboard::mst_req_collect_thread(int mst_id)
 
   while (true) {
     req = mst_req_collected_fifos[mst_id]->get();
-    AddrMapRule dec_res = g_default_addr_decoder.get_matched_rule(req.addr);
+    AddrMapRule dec_res = m_addr_dec->get_matched_rule(req.addr);
     std::ostringstream msg;
     msg << "from " << mst_id << " to " << dec_res.id << " " << req.convert2string(); 
-    UVM_INFO("MST_REQ", msg.str(), UVM_MEDIUM);
+    UVM_INFO("MST_REQ_COLLECT", msg.str(), UVM_MEDIUM);
     req_id_slv_id_map.insert(make_pair(req.id, dec_res.id));
     rsp_id_mst_id_map.insert(make_pair(req.id, mst_id));
   }
@@ -139,6 +145,7 @@ crossbar_scoreboard::mst_rsp_collect_thread(int mst_id)
 
   while (true) {
     rsp = mst_rsp_collected_fifos[mst_id]->get();
+    UVM_INFO("MST_RSP_COLLECT", rsp.convert2string(), UVM_MEDIUM);
     auto it = rsp_id_mst_id_map.find(rsp.id);
     if (it != rsp_id_mst_id_map.end()) {
       if (mst_id != it->second) {
@@ -152,8 +159,7 @@ crossbar_scoreboard::mst_rsp_collect_thread(int mst_id)
         check_expected_mem(rsp);
       }
     } else {
-       UVM_ERROR("RSP_ID", "does NOT exist in rsp_id_mst_id_map: "
-        + rsp.id);
+      UVM_ERROR("RSP_ID", "does NOT exist in rsp_id_mst_id_map: " + rsp.id);
       num_errors++;     
     }
   }
@@ -164,13 +170,15 @@ crossbar_scoreboard::check_expected_mem(const crossbar_transfer& trans)
 {
   for (int i = 0; i < trans.size(); ++i) {
     if (mem_expected.find(trans.addr + i) == mem_expected.end()) {
-      UVM_ERROR("READ_DATA_DONT_EXIST",
-        "addr: "+ to_string(trans.addr + i));
+      std::ostringstream msg;
+      msg << "id : " << trans.id << " addr : 0x" << std::hex << (trans.addr + i);
+      UVM_ERROR("READ_DATA_DONT_EXIST", msg.str());
     } else if (trans.data[i] != mem_expected[trans.addr + i]) {
-      UVM_ERROR("READ_DATA_MISMATCH", 
-        "addr: " + to_string(trans.addr + i)
-        + ", actual data: " + to_string(trans.data[i])
-        + ", expected data: " + to_string(mem_expected[trans.addr + i]));
+      std::ostringstream msg;
+      msg << "id :" << trans.id << " addr : 0x" << std::hex << (trans.addr + i)
+          << " actual data : 0x" << trans.data[i]
+          << " expeted data : 0x" << mem_expected[trans.addr + i];
+      UVM_ERROR("READ_DATA_MISMATCH", msg.str());
       num_errors++;
     }
   }
@@ -183,6 +191,7 @@ crossbar_scoreboard::slv_req_collect_thread(int slv_id)
 
   while (true) {
     req = slv_req_collected_fifos[slv_id]->get();
+    UVM_INFO("SLV_REQ_COLLECT", req.convert2string(), UVM_MEDIUM);
     auto it = req_id_slv_id_map.find(req.id);
     if (it != req_id_slv_id_map.end()) {
       if (slv_id != it->second) {
@@ -218,6 +227,7 @@ crossbar_scoreboard::slv_rsp_collect_thread(int slv_id)
 
   while (true) {
     rsp = slv_rsp_collected_fifos[slv_id]->get();
+    UVM_INFO("SLV_RSP_COLLECT", rsp.convert2string(), UVM_MEDIUM);
     if (rsp.cmd == READ) {
       for (int i = 0; i < rsp.size(); ++i) {
         if (mem_expected.find(rsp.addr + i) == mem_expected.end()) {
