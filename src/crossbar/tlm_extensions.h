@@ -7,6 +7,7 @@ class extension_trans_id
 : public tlm::tlm_extension<extension_trans_id>
 {
   friend class tlm_gp_mm;
+
 public:
   extension_trans_id(uint64_t id);
   void copy_from(const tlm::tlm_extension_base& ext);

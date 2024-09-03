@@ -22,6 +22,8 @@ tlm_gp_mm::allocate()
     extension_trans_id* trans_id = new extension_trans_id(s_id_cnt++);
     gp->set_auto_extension(trans_id);
   }
+  gp->acquire();
+  std::cout << "gp alloc: id : " << get_id(gp) << std::endl;
   return gp;
 }
 
@@ -29,6 +31,7 @@ void
 tlm_gp_mm::free(tlm::tlm_generic_payload* gp)
 {
   // gp->reset(); // reset will delete all extensions in gp
+  std::cout << "gp free: id : " << get_id(gp) << std::endl;
   m_que.push(gp);
 }
 

@@ -64,7 +64,7 @@ crossbar_master_driver::drive_req()
     if (phase == BEGIN_REQ) {
       wait(req_end_ev);
     }
-
+    gp->release();
     this->seq_item_port.item_done();
   }
 }
@@ -87,7 +87,6 @@ crossbar_master_driver::nb_transport_bw(
     sc_assert(it != m_trans_id_inflight_req_map.end());
     rsp.set_id_info(it->second);
     m_trans_id_inflight_req_map.erase(it);
-    gp.release();
     this->seq_item_port.put_response(rsp);
     // rsp_start_ev.notify();
   } else {

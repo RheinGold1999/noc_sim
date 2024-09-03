@@ -298,11 +298,12 @@ CROSSBAR::request_thread(int mst_id)
       sc_assert(false);
     }
 
-    // Now the request has been received by the downstream, the 
-    // m_slv_req_buf[slv_id][mst_id] should be released, and 
-    // m_slv_req_stall[slv_id][mst_id] should be checked.
+    // Now the request has been received by the downstream, so: 
+    // 1. Release the TLM request.
+    trans->release();
+    // 2. Release the m_slv_req_buf[slv_id][mst_id].
     m_slv_req_buf[slv_id][mst_id] = nullptr;
-    // If there is a stalled req, tell the upstream that it has been received.
+    // 3. If there is a stalled req, tell the upstream that it has been received.
     transaction_type* stalled_req = m_slv_req_stall[slv_id][mst_id];
     if (stalled_req != nullptr) {
       phase_type p = tlm::END_REQ;
@@ -341,7 +342,7 @@ CROSSBAR::response_thread(int slv_id)
       wait(m_slv_end_rsp_event[slv_id]);  // notified by the upstream
     } else if (status == tlm::TLM_COMPLETED) {
       // The rsp has been received by the upstream
-      sc_assert(phase == tlm::END_REQ);
+      sc_assert(phase == tlm::END_RESP);
       auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(trans));
       sc_assert(it != m_pending_trans_map.end());
       m_pending_trans_map.erase(it);
@@ -351,11 +352,12 @@ CROSSBAR::response_thread(int slv_id)
       sc_assert(false);
     }
 
-    // Now th response has been received by the upstream, the 
-    // m_mst_rsp_buf[mst_id][slv_id] should be released, and
-    // m_mst_rsp_stall[mst_id][slv_id] should be checked.
+    // Now th response has been received by the upstream, so:
+    // 1. Release the TLM Response
+    trans->release();
+    // 2. Release the m_mst_rsp_buf[mst_id][slv_id].
     m_mst_rsp_buf[mst_id][slv_id] == nullptr;
-    // If there is stalled rsp, tell the downstream that it has been received.
+    // 3. If there is stalled rsp, tell the downstream that it has been received.
     transaction_type* stalled_rsp = m_mst_rsp_stall[mst_id][slv_id];
     if (stalled_rsp != nullptr) {
       phase_type p = tlm::END_RESP;
@@ -436,7 +438,6 @@ CROSSBAR::nb_transport_fw(
 )
 {
   if (phase == tlm::BEGIN_REQ) {
-    trans.acquire();
     ConnectionInfo connect_info{slv_id, trans.get_address()};
     decode_addr(trans, connect_info);
     int mst_id = connect_info.mst_id;
@@ -446,11 +447,13 @@ CROSSBAR::nb_transport_fw(
     m_pending_trans_map[trans_id] = connect_info;
     if (m_slv_req_buf[slv_id][mst_id] == nullptr) {
       m_slv_req_buf[slv_id][mst_id] = &trans;
+      trans.acquire();
       phase = tlm::END_REQ;
       m_mst_req_arb_event_que[mst_id].notify(sc_core::SC_ZERO_TIME);
       return tlm::TLM_UPDATED;
     } else {
       m_slv_req_stall[slv_id][mst_id] = &trans;
+      trans.acquire();
       return tlm::TLM_ACCEPTED;
     }
   } else if (phase == tlm::END_RESP) {
@@ -499,6 +502,7 @@ CROSSBAR::nb_transport_bw(
     trans.set_address(it->second.get_ori_addr());
     if (m_mst_rsp_buf[mst_id][slv_id] == nullptr) {
       m_mst_rsp_buf[mst_id][slv_id] = &trans;
+      trans.acquire();
       std::cout << " m_mst_rsp_buf[" << mst_id << "]"
                 << "[" << slv_id << "] = " 
                 << m_mst_rsp_buf[mst_id][slv_id]
@@ -511,6 +515,7 @@ CROSSBAR::nb_transport_bw(
       return tlm::TLM_COMPLETED;
     } else {
       m_mst_rsp_stall[mst_id][slv_id] == &trans;
+      trans.acquire();
       std::cout << "gp_id: " << trans_id
                 << " resp pending" 
                 << std::endl;

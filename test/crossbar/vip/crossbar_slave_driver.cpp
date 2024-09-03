@@ -60,7 +60,7 @@ crossbar_slave_driver::drive_rsp()
     if (phase == BEGIN_RESP) {
       wait(rsp_end_ev);
     }
-
+    gp->release();
     this->seq_item_port.item_done();
   }
 }
@@ -72,6 +72,7 @@ crossbar_slave_driver::nb_transport_fw(
   sc_time& delay
 )
 {
+  // The requ
   tlm_sync_enum ret_status = TLM_ACCEPTED;
   if (phase == BEGIN_REQ) {
     phase = END_REQ;
