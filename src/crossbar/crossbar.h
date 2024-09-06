@@ -1,8 +1,6 @@
 #ifndef __CROSSBAR_H__
 #define __CROSSBAR_H__
 
-// #include <set>
-
 #include <tlm>
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
@@ -10,14 +8,18 @@
 #include "addr_decoder.h"
 #include "tlm_gp_mm.h"
 
-// #define D(format, args..)
+// #define CROSSBAR_DBG
 
-#define D(format, args...) \
-  printf( \
-    "[%s] [crossbar.h:%d] [%s] " format "\n" \
-  , sc_core::sc_time_stamp().to_string().c_str() \
-  , __LINE__, __FUNCTION__, args \
-  )
+#ifndef CROSSBAR_DBG
+  #define D(format, args...)
+#else
+  #define D(format, args...) \
+    printf( \
+      "[%s] [crossbar.h:%d] [%s] " format "\n" \
+    , sc_core::sc_time_stamp().to_string().c_str() \
+    , __LINE__, __FUNCTION__, args \
+    )
+#endif
 
 template <
   int NR_OF_INITIATORS, 
