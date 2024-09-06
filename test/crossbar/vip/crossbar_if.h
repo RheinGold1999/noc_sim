@@ -30,7 +30,7 @@ public:
   uvm::uvm_blocking_get_export<crossbar_transfer> rsp_get_export{"rsp_get_export"};
 
 private:
-  // connect to get_export
+  // connect to xxx_get_export as channels
   tlm::tlm_fifo<crossbar_transfer> req_fifo{"req_fifo", 128};
   tlm::tlm_fifo<crossbar_transfer> rsp_fifo{"rsp_fifo", 128};
 

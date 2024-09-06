@@ -4,10 +4,8 @@ SYSTEMC_INC = -I$(SYSTEMC_HOME)/include
 SYSTEMC_LIB = -lsystemc
 
 UVM_SC_HOME = /usr/local/uvm-systemc
-# UVM_SC_INC = -I$(UVM_SC_HOME)/include
-UVM_SC_INC = 
+UVM_SC_INC = -I$(UVM_SC_HOME)/include
 # UVM_SC_LIB = -L$(UVM_SC_HOME)/lib -luvm-systemc
-# UVM_SC_LIB = $(UVM_SC_HOME)/lib/libuvm-systemc.so
 UVM_SC_LIB = -luvm-systemc
 # UVM_SC_SRC = $(wildcard /mnt/d/code/SYSTEMC/uvm-systemc-1.0-beta6/src/uvmsc/**/*.cpp)
 

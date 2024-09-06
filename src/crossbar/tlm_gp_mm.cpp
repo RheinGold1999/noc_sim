@@ -54,7 +54,7 @@ tlm_gp_mm::instance()
   return mm;
 }
 
-uint64_t
+trans_id_t
 tlm_gp_mm::get_id(const tlm::tlm_generic_payload* gp)
 {
   extension_trans_id* id = gp->get_extension<extension_trans_id>();

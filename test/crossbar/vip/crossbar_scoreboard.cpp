@@ -78,7 +78,7 @@ void
 crossbar_scoreboard::run_phase(uvm_phase& phase)
 {
   /** SC_FORK & SC_JOIN cannot be employed directly in this case, 
-   *  so we need to refer to their implementation in `sc_join.h`
+   *  so we need to refer to their implementations in `sc_join.h`
    * 
    *  #define SC_FORK \
    *  { \

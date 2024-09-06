@@ -4,7 +4,7 @@
 #include <tlm>
 #include <queue>
 
-typedef uint64_t trans_id_t;
+typedef unsigned long long trans_id_t;
 
 class tlm_gp_mm : public tlm::tlm_mm_interface
 {

@@ -43,7 +43,7 @@ private:
 
 protected:
   std::list<MonitorBase*> m_monitor_list;
-  const int m_id;
+  const int m_id; // used by monitor to identify the port index among a port array
 };
 
 template<class T>
