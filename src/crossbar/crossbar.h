@@ -322,7 +322,7 @@ CROSSBAR::request_thread(int mst_id)
 
     // Now the request has been received by the downstream, so: 
     // 1. Release the TLM request.
-    trans->release();
+    m_slv_req_buf[slv_id][mst_id]->release();
     // 2. Release the m_slv_req_buf[slv_id][mst_id].
     m_slv_req_buf[slv_id][mst_id] = nullptr;
     // 3. If there is a stalled req, tell the upstream that it has been received.
@@ -379,7 +379,7 @@ CROSSBAR::response_thread(int slv_id)
 
     // Now th response has been received by the upstream, so:
     // 1. Release the TLM Response
-    trans->release();
+    m_mst_rsp_buf[mst_id][slv_id]->release();
     // 2. Release the m_mst_rsp_buf[mst_id][slv_id].
     m_mst_rsp_buf[mst_id][slv_id] = nullptr;
     D("m_mst_rsp_buf[%d][%d] = %p", 
