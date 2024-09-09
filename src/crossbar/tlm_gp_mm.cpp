@@ -1,6 +1,19 @@
 #include "tlm_gp_mm.h"
 #include "tlm_extensions.h"
 
+#define TLM_GP_MM_DBG
+
+#ifndef TLM_GP_MM_DBG
+  #define D(format, args...)
+#else
+  #define D(format, args...) \
+    printf( \
+      "[%s] [tlm_gp_mm.cpp:%d] [%s] " format "\n" \
+    , ::sc_core::sc_time_stamp().to_string().c_str() \
+    , __LINE__, __FUNCTION__, args \
+    )
+#endif
+
 uint64_t
 tlm_gp_mm::s_id_cnt = 0;
 
@@ -23,8 +36,7 @@ tlm_gp_mm::allocate()
     gp->set_auto_extension(trans_id);
   }
   gp->acquire();
-  std::cout << "gp alloc: id : " << get_id(gp) 
-            << ", ref_cnt : " << gp->get_ref_count() << std::endl;
+  D("GP_ALLOC: id: %llu, ref_cnt: %d", get_id(gp), gp->get_ref_count());
   return gp;
 }
 
@@ -32,7 +44,7 @@ void
 tlm_gp_mm::free(tlm::tlm_generic_payload* gp)
 {
   // gp->reset(); // reset will delete all extensions in gp
-  std::cout << "gp free: id : " << get_id(gp) << std::endl;
+  D("GP_FREE: id: %llu", get_id(gp));
   m_que.push(gp);
 }
 
@@ -67,6 +79,6 @@ tlm_gp_mm::set_id(tlm::tlm_generic_payload* gp, trans_id_t id)
 {
   extension_trans_id* trans_id = gp->get_extension<extension_trans_id>();
   assert(trans_id);
-  std::cout << "change id from " << trans_id->m_trans_id << " to " << id << std::endl;
+  D("ASSIGN_NEW_ID: change id from %llu to %llu", trans_id->m_trans_id, id);
   trans_id->m_trans_id = id;
 }

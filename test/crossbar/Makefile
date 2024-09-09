@@ -28,3 +28,6 @@ all:
 	g++ $(CXXFLAGS) -o test.out $(TEST_SRC) $(TEST_INC) \
   $(CROSSBAR_INC) $(CROSSBAR_SRC) $(VIP_INC) $(VIP_SRC) \
 	$(UVM_SC_LIB) $(SYSTEMC_LIB)
+
+sim:
+	./test.out > test.log

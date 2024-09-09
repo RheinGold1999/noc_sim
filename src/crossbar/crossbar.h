@@ -8,7 +8,7 @@
 #include "addr_decoder.h"
 #include "tlm_gp_mm.h"
 
-// #define CROSSBAR_DBG
+#define CROSSBAR_DBG
 
 #ifndef CROSSBAR_DBG
   #define D(format, args...)
@@ -354,7 +354,7 @@ CROSSBAR::response_thread(int slv_id)
     sc_assert(trans != nullptr);
     trans_id_t trans_id = tlm_gp_mm::get_id(trans);
     phase_type phase = tlm::BEGIN_RESP;
-    D("BEGIN_RESP: gp_id: %d, slv_id: %d, mst_id: %d", trans_id, slv_id, mst_id);
+    D("BEGIN_RESP: gp_id: %llu, slv_id: %d, mst_id: %d", trans_id, slv_id, mst_id);
     sc_core::sc_time time = sc_core::SC_ZERO_TIME;
     sync_enum_type status =
       target_sockets[slv_id]->nb_transport_bw(*trans, phase, time);
@@ -363,7 +363,7 @@ CROSSBAR::response_thread(int slv_id)
       // The rsp has not been received yet by the upstream, needs to
       // wait nb_transport_fw call with phase END_RESP
       sc_assert(phase == tlm::BEGIN_RESP);
-      D("RESP_PENDING: gp_id: %d", trans_id);
+      D("RESP_PENDING: gp_id: %llu", trans_id);
       wait(m_slv_end_rsp_event[slv_id]);  // notified by the upstream
     } else if (status == tlm::TLM_COMPLETED) {
       // The rsp has been received by the upstream
@@ -371,7 +371,7 @@ CROSSBAR::response_thread(int slv_id)
       auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(trans));
       sc_assert(it != m_pending_trans_map.end());
       m_pending_trans_map.erase(it);
-      D("END_RESP: gp_id: %d", trans_id);
+      D("END_RESP: gp_id: %llu", trans_id);
     } else {
       // status == tlm::TLM_UPDATED is not allowed
       sc_assert(false);
@@ -382,7 +382,7 @@ CROSSBAR::response_thread(int slv_id)
     trans->release();
     // 2. Release the m_mst_rsp_buf[mst_id][slv_id].
     m_mst_rsp_buf[mst_id][slv_id] = nullptr;
-    D("m_mst_rsp_buf[%d][%d] = %#llx", 
+    D("m_mst_rsp_buf[%d][%d] = %p", 
       mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id]);
     // 3. If there is stalled rsp, tell the downstream that it has been received.
     transaction_type* stalled_rsp = m_mst_rsp_stall[mst_id][slv_id];
@@ -391,7 +391,7 @@ CROSSBAR::response_thread(int slv_id)
       sc_core::sc_time t = sc_core::SC_ZERO_TIME;
       sync_enum_type s = initiator_sockets[mst_id]->nb_transport_fw(*stalled_rsp, p, t);
       sc_assert(s == tlm::TLM_COMPLETED);
-      D("RSP_STALL_TO_BUF: gp_id: %d", tlm_gp_mm::get_id(stalled_rsp));
+      D("RSP_STALL_TO_BUF: gp_id: %llu", tlm_gp_mm::get_id(stalled_rsp));
       m_mst_rsp_buf[mst_id][slv_id] = stalled_rsp;
       m_mst_rsp_stall[mst_id][slv_id] = nullptr;
       m_slv_rsp_arb_event_que[slv_id].notify(sc_core::SC_ZERO_TIME);
@@ -464,18 +464,18 @@ CROSSBAR::nb_transport_fw(
     sc_assert(mst_id < NR_OF_TARGETS);
     sc_assert(m_pending_trans_map.find(trans_id) == m_pending_trans_map.end());
     m_pending_trans_map[trans_id] = connect_info;
-    D("BEGIN_REQ: gp_id: %d, from %d to %d", trans_id, slv_id, mst_id);
+    D("BEGIN_REQ: gp_id: %llu, from %d to %d", trans_id, slv_id, mst_id);
     if (m_slv_req_buf[slv_id][mst_id] == nullptr) {
       m_slv_req_buf[slv_id][mst_id] = &trans;
       trans.acquire();
       phase = tlm::END_REQ;
       m_mst_req_arb_event_que[mst_id].notify(sc_core::SC_ZERO_TIME);
-      D("END_REQ: gp_id: %d", trans_id);
+      D("END_REQ: gp_id: %llu", trans_id);
       return tlm::TLM_UPDATED;
     } else {
       m_slv_req_stall[slv_id][mst_id] = &trans;
       trans.acquire();
-      D("REQ_PENDING: gp_id: %d", trans_id);
+      D("REQ_PENDING: gp_id: %llu", trans_id);
       return tlm::TLM_ACCEPTED;
     }
   } else if (phase == tlm::END_RESP) {
@@ -483,7 +483,7 @@ CROSSBAR::nb_transport_fw(
     sc_assert(it != m_pending_trans_map.end());
     m_pending_trans_map.erase(it);
     m_slv_end_rsp_event[slv_id].notify(sc_core::SC_ZERO_TIME);
-    D("END_RESP: gp_id: %d", trans_id);
+    D("END_RESP: gp_id: %llu", trans_id);
     return tlm::TLM_COMPLETED;
   } else {
     SC_REPORT_ERROR("TLM-2", 
@@ -504,31 +504,31 @@ CROSSBAR::nb_transport_bw(
 {
   trans_id_t trans_id = tlm_gp_mm::get_id(&trans);
   auto it = m_pending_trans_map.find(trans_id);
-  D("gp_id: %d, addr: %#llx", trans_id, trans.get_address());
+  D("gp_id: %llu, addr: %#llx", trans_id, trans.get_address());
   sc_assert(it != m_pending_trans_map.end());
   sc_assert(it->second.mst_id == mst_id);
   if (phase == tlm::END_REQ) {
     m_mst_end_req_event[mst_id].notify();
-    D("END_REQ: gp_id: %d, end req", trans_id);
+    D("END_REQ: gp_id: %llu, end req", trans_id);
     return tlm::TLM_ACCEPTED;
   } else if (phase == tlm::BEGIN_RESP) {
     int slv_id = it->second.get_slv_id();
-    D("BEGIN_RESP: gp_id: %d, mst_id: %d, slv_id: %d", trans_id, mst_id, slv_id);
+    D("BEGIN_RESP: gp_id: %llu, mst_id: %d, slv_id: %d", trans_id, mst_id, slv_id);
     trans.set_address(it->second.get_ori_addr());
     if (m_mst_rsp_buf[mst_id][slv_id] == nullptr) {
       m_mst_rsp_buf[mst_id][slv_id] = &trans;
       trans.acquire();
       phase = tlm::END_RESP;
       m_slv_rsp_arb_event_que[slv_id].notify(sc_core::SC_ZERO_TIME);
-      D("END_RESP: gp_id: %d, m_mst_rsp_buf[%d][%d]: %#llx", 
+      D("END_RESP: gp_id: %llu, m_mst_rsp_buf[%d][%d]: %p", 
         trans_id, mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id]);
       return tlm::TLM_COMPLETED;
     } else {
-      m_mst_rsp_stall[mst_id][slv_id] == &trans;
+      m_mst_rsp_stall[mst_id][slv_id] = &trans;
       trans.acquire();
-      D("m_mst_rsp_buf[%d][%d] = %#llx", 
+      D("m_mst_rsp_buf[%d][%d] = %p", 
         mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id]);
-      D("RESP_PENDING: gp_id: %d, pending gp_id: %d", 
+      D("RESP_PENDING: gp_id: %llu, pending gp_id: %llu", 
         trans_id, tlm_gp_mm::get_id(m_mst_rsp_buf[mst_id][slv_id]));
       return tlm::TLM_ACCEPTED;
     }
