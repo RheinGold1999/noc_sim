@@ -321,7 +321,7 @@ CROSSBAR::request_thread(int mst_id)
     }
 
     // Now the request has been received by the downstream, so: 
-    // 1. Release the TLM request.
+    // 1. Release the TLM Generic Payload.
     m_slv_req_buf[slv_id][mst_id]->release();
     // 2. Release the m_slv_req_buf[slv_id][mst_id].
     m_slv_req_buf[slv_id][mst_id] = nullptr;
@@ -377,8 +377,8 @@ CROSSBAR::response_thread(int slv_id)
       sc_assert(false);
     }
 
-    // Now th response has been received by the upstream, so:
-    // 1. Release the TLM Response
+    // Now the response has been received by the upstream, so:
+    // 1. Release the TLM Generic Payload
     m_mst_rsp_buf[mst_id][slv_id]->release();
     // 2. Release the m_mst_rsp_buf[mst_id][slv_id].
     m_mst_rsp_buf[mst_id][slv_id] = nullptr;
