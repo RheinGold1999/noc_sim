@@ -22,8 +22,8 @@
 #endif
 
 template <
-  int NR_OF_INITIATORS, 
-  int NR_OF_TARGETS
+  int NR_OF_INITIATORS
+, int NR_OF_TARGETS
 >
 class CrossBar : public sc_core::sc_module
 {
@@ -43,9 +43,9 @@ public:
 
 public:
   CrossBar(
-    const sc_core::sc_module_name& name, 
-    const sc_core::sc_time& period,
-    const AddrDecoder* addr_dec
+    const sc_core::sc_module_name& name
+  , const sc_core::sc_time& period
+  , const AddrDecoder* addr_dec
   );
   ~CrossBar();
 
@@ -74,17 +74,17 @@ private:
   // TLM-2.0 Interfaces
   // ---------------------------------------------------------------------------
   sync_enum_type nb_transport_fw(
-    int initiator_id,
-    transaction_type& trans,
-    phase_type& phase,
-    sc_core::sc_time& time
+    int initiator_id
+  , transaction_type& trans
+  , phase_type& phase
+  , sc_core::sc_time& time
   );
 
   sync_enum_type nb_transport_bw(
-    int target_id,
-    transaction_type& trans,
-    phase_type& phase,
-    sc_core::sc_time& time
+    int target_id
+  , transaction_type& trans
+  , phase_type& phase
+  , sc_core::sc_time& time
   );
 
   unsigned int transport_dbg(int initiator_id, transaction_type& trans);
@@ -199,27 +199,27 @@ private:
   int m_mst_req_arb_res[NR_OF_TARGETS];
 };
 
-// -----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 // Implementation
-// -----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 
 #define TEMPLATE \
   template < \
-    int NR_OF_INITIATORS, \
-    int NR_OF_TARGETS \
+    int NR_OF_INITIATORS \
+  , int NR_OF_TARGETS \
   >
 
 #define CROSSBAR \
   CrossBar< \
-    NR_OF_INITIATORS, \
-    NR_OF_TARGETS \
+    NR_OF_INITIATORS \
+  , NR_OF_TARGETS \
   >
 
 TEMPLATE
 CROSSBAR::CrossBar(
-  const sc_core::sc_module_name& name, 
-  const sc_core::sc_time& period,
-  const AddrDecoder* addr_dec
+  const sc_core::sc_module_name& name
+, const sc_core::sc_time& period
+, const AddrDecoder* addr_dec
 )
 : sc_module(name)
 , m_period(period)
@@ -290,7 +290,7 @@ CROSSBAR::~CrossBar()
 {}
 
 /**
- * @brief: Try to issue request in initiator_sockets[mst_id]
+ * @brief Try to issue request in initiator_sockets[mst_id]
  */
 TEMPLATE
 void
@@ -340,7 +340,7 @@ CROSSBAR::request_thread(int mst_id)
 }
 
 /**
- * @brief: Try to issue response in target_sockets[slv_id]
+ * @brief Try to issue response in target_sockets[slv_id]
  */
 TEMPLATE
 void
@@ -450,10 +450,10 @@ CROSSBAR::rsp_arb_thread(int slv_id)
 TEMPLATE
 typename CROSSBAR::sync_enum_type
 CROSSBAR::nb_transport_fw(
-  int slv_id,
-  transaction_type& trans,
-  phase_type& phase,
-  sc_core::sc_time& time
+  int slv_id
+, transaction_type& trans
+, phase_type& phase
+, sc_core::sc_time& time
 )
 {
   trans_id_t trans_id = tlm_gp_mm::get_id(&trans);
@@ -496,10 +496,10 @@ CROSSBAR::nb_transport_fw(
 TEMPLATE
 typename CROSSBAR::sync_enum_type
 CROSSBAR::nb_transport_bw(
-  int mst_id,
-  transaction_type& trans,
-  phase_type& phase,
-  sc_core::sc_time& time
+  int mst_id
+, transaction_type& trans
+, phase_type& phase
+, sc_core::sc_time& time
 )
 {
   trans_id_t trans_id = tlm_gp_mm::get_id(&trans);
@@ -575,9 +575,10 @@ CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 }
 
 
+#undef D
+
 #undef TEMPLATE
 #undef CROSSBAR
 
-#undef D
 
 #endif /* __CROSSBAR_H__ */

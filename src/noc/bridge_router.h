@@ -25,9 +25,9 @@ public:
 
 public:
   BridgeRouter(
-    const ModelBase* parent,
-    const std::string& name,
-    const Coord& coord
+    const ModelBase* parent
+  , const std::string& name
+  , const Coord& coord
   );
   ~BridgeRouter();
 
