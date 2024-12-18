@@ -26,7 +26,7 @@ void
 Simulator::run(uint64_t cyc)
 {
   elaborate();
-  _INFO("elabortion done...");
+  _INFO("elaboration done...");
   simulate(cyc);
   _INFO("simulation done...");
   finalize();

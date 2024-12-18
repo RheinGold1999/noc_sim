@@ -10,11 +10,6 @@
 DoubleRing::DoubleRing(const ModelBase* parent, const std::string& name) :
   Network(parent, name)
 {
-  // ASSERT(
-  //   NocConfig::network_lvl_0_num == (8 + 1) ||
-  //   NocConfig::network_lvl_0_num == (12 + 1) ||
-  //   NocConfig::network_lvl_0_num == (16 + 1)
-  // );
   ASSERT(NocConfig::network_lvl_1_num == 2);
 
   m_node_num = get_node_num();
