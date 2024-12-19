@@ -10,15 +10,15 @@
 
 #define CROSSBAR_DBG
 
-#ifndef CROSSBAR_DBG
-  #define D(format, args...)
-#else
+#ifdef CROSSBAR_DBG
   #define D(format, args...) \
     printf( \
       "[%s] [crossbar.h:%d] [%s] " format "\n" \
     , sc_core::sc_time_stamp().to_string().c_str() \
     , __LINE__, __FUNCTION__, args \
     )
+#else
+  #define D(format, args...)
 #endif
 
 template <
@@ -571,7 +571,7 @@ CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
   AddrMapRule matched_rule = m_addr_dec->get_matched_rule(ori_addr);
   std::cout << "ori_addr = 0x" << std::hex << ori_addr << ", mst_id = " << matched_rule.id << std::endl;
   connect_info.mst_id = matched_rule.id;
-  connect_info.map_addr = ori_addr - matched_rule.start_addr;
+  connect_info.map_addr = ori_addr - matched_rule.base_addr;
 }
 
 

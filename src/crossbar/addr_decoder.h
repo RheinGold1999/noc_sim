@@ -6,20 +6,20 @@
 
 struct AddrMapRule 
 {
-  uint64_t start_addr;
-  uint64_t end_addr;
-  int      id;
+  uint64_t base_addr;
+  uint64_t mask;
+  uint32_t id;
 
-  AddrMapRule(uint64_t sa_, uint64_t ea_, int id_);
+  AddrMapRule(uint64_t base_addr_, uint64_t mask_, uint32_t id_);
 };
 
 class AddrDecoder
 {
 public:
-  AddrDecoder(const std::vector<AddrMapRule>& rules, int dft_id = 0);
+  AddrDecoder(const std::vector<AddrMapRule>& rules, uint32_t dft_id = 0);
 
   AddrMapRule get_matched_rule(uint64_t ori_addr) const;
-  void add_map_rule(uint64_t start_addr, uint64_t end_addr, int id);
+  void add_map_rule(uint64_t base_addr, uint64_t mask, uint32_t id);
 
 private:
   std::vector<AddrMapRule> m_map_rule_vec;
@@ -27,4 +27,4 @@ private:
 
 extern AddrDecoder g_default_addr_decoder;
 
-#endif /* __ADDR_DECODER_H__ */
+#endif  // __ADDR_DECODER_H__

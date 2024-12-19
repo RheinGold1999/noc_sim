@@ -13,13 +13,13 @@ int sc_main(int, char**)
 
   AddrDecoder* addr_dec = new AddrDecoder(
     {
-      AddrMapRule(0x0000'0000, 0x1000'0000, 0),
-      AddrMapRule(0x1000'0000, 0x2000'0000, 1),
-      AddrMapRule(0x2000'0000, 0x3000'0000, 2),
-      AddrMapRule(0x3000'0000, 0x4000'0000, 3),
-      AddrMapRule(0x4000'0000, 0x5000'0000, 5),
-      AddrMapRule(0x5000'0000, 0x6000'0000, 6),
-      AddrMapRule(0x6000'0000, UINT64_MAX,  7),
+      AddrMapRule(0x0000'0000, 0xFFF'FFFF, 0),
+      AddrMapRule(0x1000'0000, 0xFFF'FFFF, 1),
+      AddrMapRule(0x2000'0000, 0xFFF'FFFF, 2),
+      AddrMapRule(0x3000'0000, 0xFFF'FFFF, 3),
+      AddrMapRule(0x4000'0000, 0xFFF'FFFF, 5),
+      AddrMapRule(0x5000'0000, 0xFFF'FFFF, 6),
+      AddrMapRule(0x0000'0000, UINT64_MAX, 7),
     }
   );
 
