@@ -1,6 +1,8 @@
 #ifndef __CROSSBAR_H__
 #define __CROSSBAR_H__
 
+#include <sstream>
+
 #include <tlm>
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
@@ -8,12 +10,12 @@
 #include "addr_decoder.h"
 #include "tlm_gp_mm.h"
 
-#define CROSSBAR_DBG
+// #define CROSSBAR_DBG
 
 #ifdef CROSSBAR_DBG
   #define D(format, args...) \
     printf( \
-      "[%s] [crossbar.h:%d] [%s] " format "\n" \
+      "%s [crossbar.h:%d][%s] " format "\n" \
     , sc_core::sc_time_stamp().to_string().c_str() \
     , __LINE__, __FUNCTION__, args \
     )
@@ -568,7 +570,7 @@ CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
   uint64_t ori_addr = (uint64_t)trans.get_address();
   AddrMapRule matched_rule = m_addr_dec.get_matched_rule(ori_addr);
-  std::cout << "ori_addr = 0x" << std::hex << ori_addr << ", mst_id = " << matched_rule.id << std::endl;
+  D("ori_addr: 0x%llx, mst_id: %d", ori_addr, matched_rule.id);
   connect_info.mst_id = matched_rule.id;
   connect_info.map_addr = ori_addr - matched_rule.base_addr;
 }

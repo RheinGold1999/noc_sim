@@ -23,7 +23,7 @@ private:
 public:
   static tlm_gp_mm& instance();
   static uint64_t s_id_cnt;
-  static trans_id_t get_id(const tlm::tlm_generic_payload* gp);
+  static trans_id_t get_id(tlm::tlm_generic_payload* gp);
   static void set_id(tlm::tlm_generic_payload*gp, trans_id_t id);
 };
 

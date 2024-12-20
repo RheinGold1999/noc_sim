@@ -67,10 +67,13 @@ tlm_gp_mm::instance()
 }
 
 trans_id_t
-tlm_gp_mm::get_id(const tlm::tlm_generic_payload* gp)
+tlm_gp_mm::get_id(tlm::tlm_generic_payload* gp)
 {
   extension_trans_id* id = gp->get_extension<extension_trans_id>();
-  assert(id);
+  if(id == nullptr) {
+    id = new extension_trans_id(s_id_cnt++);
+    gp->set_auto_extension(id);
+  }
   return id->m_trans_id;
 }
 
