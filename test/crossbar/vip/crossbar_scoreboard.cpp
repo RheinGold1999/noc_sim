@@ -35,11 +35,13 @@ crossbar_scoreboard::build_phase(uvm_phase& phase)
   }
   sc_assert(num_slv > 0);
 
-  if (!uvm_config_db<AddrDecoder*>::get(this, "", "addr_dec", m_addr_dec)) {
+  AddrDecoder* addr_dec;
+  if (!uvm_config_db<AddrDecoder*>::get(this, "", "addr_dec", addr_dec)) {
      UVM_FATAL("ADDR_DEC_NOT_SET", "addr_dec not set for: "
       + get_full_name()); 
   }
-  sc_assert(m_addr_dec);
+  sc_assert(addr_dec);
+  m_addr_dec = new AddrDecoder(*addr_dec);
 
   // build fifo arrays based on num_mst and num_slv
   for (int i = 0; i < num_mst; ++i) {
@@ -72,6 +74,7 @@ crossbar_scoreboard::final_phase(uvm_phase& phase)
     delete slv_req_collected_fifos[i];
     delete slv_rsp_collected_fifos[i];
   }
+  delete m_addr_dec;
 }
 
 void
