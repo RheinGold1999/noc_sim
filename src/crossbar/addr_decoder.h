@@ -16,7 +16,9 @@ struct AddrMapRule
 class AddrDecoder
 {
 public:
-  AddrDecoder(const std::vector<AddrMapRule>& rules, uint32_t dft_id = 0);
+  AddrDecoder(const std::vector<AddrMapRule>& rules);
+  AddrDecoder(const AddrDecoder& other);
+  AddrDecoder& operator = (const AddrDecoder& other);
 
   AddrMapRule get_matched_rule(uint64_t ori_addr) const;
   void add_map_rule(uint64_t base_addr, uint64_t mask, uint32_t id);

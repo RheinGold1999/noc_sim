@@ -1,15 +1,29 @@
 #include "addr_decoder.h"
+#include <systemc>
 
 AddrMapRule::AddrMapRule(uint64_t base_addr_, uint64_t mask_, uint32_t id_)
-: base_addr(base_addr)
+: base_addr(base_addr_)
 , mask(mask_)
 , id(id_)
 {}
 
-AddrDecoder::AddrDecoder(const std::vector<AddrMapRule>& rules, uint32_t dft_id)
+AddrDecoder::AddrDecoder(const std::vector<AddrMapRule>& rules)
 : m_map_rule_vec(rules)
 {
-  // add_map_rule(0, UINT64_MAX, dft_id);
+
+}
+
+AddrDecoder::AddrDecoder(const AddrDecoder& other)
+: m_map_rule_vec(other.m_map_rule_vec)
+{
+
+}
+
+AddrDecoder&
+AddrDecoder::operator = (const AddrDecoder& other)
+{
+  this->m_map_rule_vec = other.m_map_rule_vec;
+  return *this;
 }
 
 AddrMapRule
@@ -24,6 +38,7 @@ AddrDecoder::get_matched_rule(uint64_t addr) const
       return *it;
     }
   }
+  sc_assert(false && "address decoding failed");
   return m_map_rule_vec.back();
 }
 
