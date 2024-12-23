@@ -15,9 +15,9 @@
 #ifdef CROSSBAR_DBG
   #define D(format, args...) \
     printf( \
-      "%s [crossbar.h:%d][%s] " format "\n" \
+      "%s [crossbar.h:%d][%s][%s] " format "\n" \
     , sc_core::sc_time_stamp().to_string().c_str() \
-    , __LINE__, __FUNCTION__, args \
+    , __LINE__, __FUNCTION__, this->name(), args \
     )
 #else
   #define D(format, args...)
@@ -284,6 +284,12 @@ CROSSBAR::CrossBar(
     os << "req_arb_thread_" << mst_id;
     sc_spawn(sc_bind(&CrossBar::req_arb_thread, this, mst_id), os.str().c_str());
   }
+
+  D("%s", "------------------------- mapping rules -------------------------");
+  for (auto const rule : m_addr_dec.m_map_rule_vec) {
+    D("%s", rule.to_str().c_str());
+  }
+  D("%s", "-----------------------------------------------------------------");
 }
 
 TEMPLATE
