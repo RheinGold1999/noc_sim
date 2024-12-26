@@ -49,7 +49,7 @@ public:
 
   crossbar_transfer& operator=(const crossbar_transfer& rhs);
 
-  void init_by_gp(const tlm::tlm_generic_payload& trans);
+  void init_by_gp(tlm::tlm_generic_payload& trans);
   void copy_to_gp(tlm::tlm_generic_payload& trans);
 
 private:

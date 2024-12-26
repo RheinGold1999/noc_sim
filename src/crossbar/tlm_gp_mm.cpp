@@ -1,18 +1,27 @@
 #include "tlm_gp_mm.h"
 #include "tlm_extensions.h"
 
-#define TLM_GP_MM_DBG
+// #define TLM_GP_MM_DBG
 
-#ifndef TLM_GP_MM_DBG
-  #define D(format, args...)
-#else
+#ifdef TLM_GP_MM_DBG
   #define D(format, args...) \
     printf( \
-      "[%s] [tlm_gp_mm.cpp:%d] [%s] " format "\n" \
+      "%s [tlm_gp_mm.cpp:%d] [%s] " format "\n" \
     , ::sc_core::sc_time_stamp().to_string().c_str() \
     , __LINE__, __FUNCTION__, args \
     )
+#else
+  #define D(format, args...)
 #endif
+
+std::ostream& operator << (std::ostream& os, tlm::tlm_generic_payload& gp)
+{
+  os << "id: " << std::dec << tlm_gp_mm::get_id(&gp)
+    << ", addr: 0x" << std::hex << gp.get_address()
+    << ", data_len: " << std::dec << gp.get_data_length()
+    ;
+  return os;
+}
 
 uint64_t
 tlm_gp_mm::s_id_cnt = 0;

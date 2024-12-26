@@ -140,7 +140,7 @@ crossbar_transfer::operator=(const crossbar_transfer& rhs)
 }
 
 void
-crossbar_transfer::init_by_gp(const tlm::tlm_generic_payload& gp)
+crossbar_transfer::init_by_gp(tlm::tlm_generic_payload& gp)
 {
   id = tlm_gp_mm::get_id(&gp);
   cmd = gp.is_read() ? READ : (

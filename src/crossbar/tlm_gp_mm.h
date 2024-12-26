@@ -27,5 +27,6 @@ public:
   static void set_id(tlm::tlm_generic_payload*gp, trans_id_t id);
 };
 
+std::ostream& operator << (std::ostream& os, tlm::tlm_generic_payload& gp);
 
 #endif /* __TLM_GP_MM_H__ */
