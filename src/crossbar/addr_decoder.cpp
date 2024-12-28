@@ -2,7 +2,8 @@
 #include <systemc>
 #include <sstream>
 
-#ifdef CROSSBAR_DGB
+
+#ifdef CROSSBAR_DBG
   #define D(format, args...) \
     printf( \
       "%s [addr_decoder.cpp:%d][%s][%s] " format "\n" \
