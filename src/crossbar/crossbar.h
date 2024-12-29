@@ -152,7 +152,6 @@ private:
    *         should pick one to relay to the upstream.
    */
   sc_core::sc_event m_slv_rsp_arb_event[NR_OF_INITIATORS];
-  unsigned m_slv_rsp_pend_num[NR_OF_INITIATORS];
 
   /**
    * @brief Used to notify the arbiter for a given master that there
@@ -160,7 +159,6 @@ private:
    *         should pick one to relay to the downstream.
    */
   sc_core::sc_event m_mst_req_arb_event[NR_OF_TARGETS];
-  unsigned m_mst_req_pend_num[NR_OF_TARGETS];
 
   /**
    * @brief Used to notify the slave that it can send response
@@ -240,7 +238,6 @@ CROSSBAR::CrossBar(
       m_slv_req_buf[i][j] = nullptr;
       m_slv_req_stall[i][j] = nullptr;
     }
-    m_slv_rsp_pend_num[i] = 0;
   }
 
   for (int i = 0; i < NR_OF_TARGETS; ++i) {
@@ -248,7 +245,6 @@ CROSSBAR::CrossBar(
       m_mst_rsp_buf[i][j] = nullptr;
       m_mst_rsp_stall[i][j] = nullptr;
     }
-    m_mst_req_pend_num[i] = 0;
   }
 
   // ---------------------------------------------------------------------------
@@ -328,8 +324,6 @@ CROSSBAR::request_thread(int mst_id)
     } else if (status == tlm::TLM_UPDATED) {
       // The req has been received by the downstream
       sc_assert(phase == tlm::END_REQ);
-      m_mst_req_pend_num[mst_id]--;
-      m_mst_end_req_event[mst_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
       D("req sent: trans_id: %llu, addr: %llx, mst_id: %d, slv_id: %d",
         tlm_gp_mm::get_id(trans), trans->get_address(), mst_id, slv_id);
     } else {
@@ -351,11 +345,11 @@ CROSSBAR::request_thread(int mst_id)
       sc_assert(s == tlm::TLM_ACCEPTED);
       m_slv_req_buf[slv_id][mst_id] = stalled_req;
       m_slv_req_stall[slv_id][mst_id] = nullptr;
-      m_mst_req_arb_event[mst_id].notify();
-      m_mst_req_pend_num[mst_id]++;
       D("stalled req received: gp_id: %llu, addr: %llx, slv_id: %d, mst_id: %d",
         tlm_gp_mm::get_id(stalled_req), stalled_req->get_address(), slv_id, mst_id);
     }
+
+    m_mst_req_arb_event[mst_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
   }
 }
 
@@ -390,8 +384,6 @@ CROSSBAR::response_thread(int slv_id)
       auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(trans));
       sc_assert(it != m_pending_trans_map.end());
       m_pending_trans_map.erase(it);
-      m_slv_rsp_pend_num[slv_id]--;
-      m_slv_end_rsp_event[slv_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
       D("rsp sent: gp_id: %llu, addr: %llx, slv_id: %d, mst_id: %d", 
         tlm_gp_mm::get_id(trans), trans->get_address(), slv_id, mst_id);
     } else {
@@ -415,11 +407,11 @@ CROSSBAR::response_thread(int slv_id)
       sc_assert(s == tlm::TLM_COMPLETED);
       m_mst_rsp_buf[mst_id][slv_id] = stalled_rsp;
       m_mst_rsp_stall[mst_id][slv_id] = nullptr;
-      m_slv_rsp_arb_event[slv_id].notify();
-      m_slv_rsp_pend_num[slv_id]++;
       D("stalled rsp received: gp_id: %llu, addr: %llx, slv_id: %d, mst_id: %d",
         tlm_gp_mm::get_id(stalled_rsp), stalled_rsp->get_address(), slv_id, mst_id);
     }
+
+    m_slv_rsp_arb_event[slv_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
   }
 }
 
@@ -427,31 +419,46 @@ TEMPLATE
 void
 CROSSBAR::req_arb_thread(int mst_id)
 {
-  static int slv_id_rr = -1;
+  static unsigned slv_id_rr = 0;
 
   while (true) {
     wait(m_mst_req_arb_event[mst_id]);
 
-    while (m_mst_req_pend_num[mst_id] > 0) {
-      D("req to arb: mst_id: %d", mst_id);
-      // Arbitration via Round Robin
-      do {
-        slv_id_rr = (slv_id_rr + 1) % NR_OF_INITIATORS;
-      } while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr);
+    // while (m_mst_req_pend_num[mst_id] > 0) {
+    //   D("req to arb: mst_id: %d", mst_id);
+    //   // Arbitration via Round Robin
+    //   do {
+    //     slv_id_rr = (slv_id_rr + 1) % NR_OF_INITIATORS;
+    //   } while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr);
 
-      D("req arb res: mst_id: %d, slv_id_rr: %d, addr: %llx",
-        mst_id, slv_id_rr, m_slv_req_buf[slv_id_rr][mst_id]->get_address());
+    //   D("req arb res: mst_id: %d, slv_id_rr: %d, addr: %llx",
+    //     mst_id, slv_id_rr, m_slv_req_buf[slv_id_rr][mst_id]->get_address());
 
-      for (unsigned slv_id = 0; slv_id < NR_OF_INITIATORS; ++slv_id) {
-        D("m_slv_req_buf[%d][%d]: %p, addr: %llx",
-          slv_id, mst_id, m_slv_req_buf[slv_id][mst_id],
-          (m_slv_req_buf[slv_id][mst_id] ? m_slv_req_buf[slv_id][mst_id]->get_address() : 0));
+    //   for (unsigned slv_id = 0; slv_id < NR_OF_INITIATORS; ++slv_id) {
+    //     D("m_slv_req_buf[%d][%d]: %p, addr: %llx",
+    //       slv_id, mst_id, m_slv_req_buf[slv_id][mst_id],
+    //       (m_slv_req_buf[slv_id][mst_id] ? m_slv_req_buf[slv_id][mst_id]->get_address() : 0));
+    //   }
+
+    //   m_mst_req_arb_res[mst_id] = slv_id_rr;
+    //   m_mst_begin_req_event[mst_id].notify();
+
+    //   wait(m_mst_end_req_event[mst_id]);
+    // }
+
+    for (unsigned i = 0; i < NR_OF_INITIATORS; ++i) {
+      unsigned slv_id = slv_id_rr % NR_OF_INITIATORS;
+      if (m_slv_req_buf[slv_id][mst_id] != nullptr) {
+        m_mst_req_arb_res[mst_id] = slv_id;
+        m_mst_begin_req_event[mst_id].notify();
+
+        D("req arb res: mst_id: %d, slv_id: %d, addr: %llx",
+          mst_id, slv_id, m_slv_req_buf[slv_id][mst_id]->get_address());
+
+        slv_id_rr++;
+        break; 
       }
-
-      m_mst_req_arb_res[mst_id] = slv_id_rr;
-      m_mst_begin_req_event[mst_id].notify();
-
-      wait(m_mst_end_req_event[mst_id]);
+      slv_id_rr++;
     }
   }
 }
@@ -460,32 +467,48 @@ TEMPLATE
 void
 CROSSBAR::rsp_arb_thread(int slv_id)
 {
-  static int mst_id_rr = -1;
+  static unsigned mst_id_rr = 0;
   
   while (true) {
     wait(m_slv_rsp_arb_event[slv_id]);
 
-    while (m_slv_rsp_pend_num[slv_id] > 0) {
-      D("rsp to arb: slv_id: %d", slv_id);
-      // Arbitration via Round Robin
-      do {
-        mst_id_rr = (mst_id_rr + 1) % NR_OF_TARGETS;
-      } while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr);
+    // while (m_slv_rsp_pend_num[slv_id] > 0) {
+    //   D("rsp to arb: slv_id: %d", slv_id);
+    //   // Arbitration via Round Robin
+    //   do {
+    //     mst_id_rr = (mst_id_rr + 1) % NR_OF_TARGETS;
+    //   } while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr);
 
-      D("rsp arb res: slv_id: %d, mst_id_rr: %d, addr: %llx",
-        slv_id, mst_id_rr, m_mst_rsp_buf[mst_id_rr][slv_id]->get_address());
+    //   D("rsp arb res: slv_id: %d, mst_id_rr: %d, addr: %llx",
+    //     slv_id, mst_id_rr, m_mst_rsp_buf[mst_id_rr][slv_id]->get_address());
 
-      for (unsigned mst_id = 0; mst_id < NR_OF_TARGETS; ++mst_id) {
-        D("m_mst_rsp_buf[%d][%d]: %p, addr: %llx",
-          mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id],
-          (m_mst_rsp_buf[mst_id][slv_id] ? m_mst_rsp_buf[mst_id][slv_id]->get_address() : 0));
+    //   for (unsigned mst_id = 0; mst_id < NR_OF_TARGETS; ++mst_id) {
+    //     D("m_mst_rsp_buf[%d][%d]: %p, addr: %llx",
+    //       mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id],
+    //       (m_mst_rsp_buf[mst_id][slv_id] ? m_mst_rsp_buf[mst_id][slv_id]->get_address() : 0));
+    //   }
+
+    //   m_slv_rsp_arb_res[slv_id] = mst_id_rr;
+    //   m_slv_begin_rsp_event[slv_id].notify();
+
+    //   wait(m_slv_end_rsp_event[slv_id]);
+    // }
+
+    for (unsigned i = 0; i < NR_OF_TARGETS; ++i) {
+      unsigned mst_id = mst_id_rr % NR_OF_TARGETS;
+      if (m_mst_rsp_buf[mst_id][slv_id] != nullptr) {
+        m_slv_rsp_arb_res[slv_id] = mst_id;
+        m_slv_begin_rsp_event[slv_id].notify();
+
+        D("rsp arb res: slv_id: %d, mst_id: %d, addr: %llx",
+          slv_id, mst_id, m_mst_rsp_buf[mst_id][slv_id]->get_address());
+
+        mst_id_rr++;
+        break;
       }
-
-      m_slv_rsp_arb_res[slv_id] = mst_id_rr;
-      m_slv_begin_rsp_event[slv_id].notify();
-
-      wait(m_slv_end_rsp_event[slv_id]);
+      mst_id_rr++;
     }
+
   }
 }
 
@@ -511,7 +534,6 @@ CROSSBAR::nb_transport_fw(
       m_slv_req_buf[slv_id][mst_id] = &trans;
       trans.acquire();
       phase = tlm::END_REQ;
-      m_mst_req_pend_num[mst_id]++;
       m_mst_req_arb_event[mst_id].notify();
       D("req received: gp_id: %llu, addr: %llx, slv_id: %d, mst_id: %d",
         trans_id, trans.get_address(), slv_id, mst_id);
@@ -527,7 +549,6 @@ CROSSBAR::nb_transport_fw(
     auto it = m_pending_trans_map.find(tlm_gp_mm::get_id(&trans));
     sc_assert(it != m_pending_trans_map.end());
     m_pending_trans_map.erase(it);
-    m_slv_rsp_pend_num[slv_id]--;
     m_slv_end_rsp_event[slv_id].notify();
     D("stalled rsp received: gp_id: %llu, addr: %llx, slv_id: %d",
       trans_id, trans.get_address(), slv_id);
@@ -555,7 +576,6 @@ CROSSBAR::nb_transport_bw(
   sc_assert(it->second.mst_id == mst_id);
   int slv_id = it->second.get_slv_id();
   if (phase == tlm::END_REQ) {
-    m_mst_req_pend_num[mst_id]--;
     m_mst_end_req_event[mst_id].notify();
     D("stalled req received: gp_id: %llu, addr: %llx, mst_id: %d, slv_id: %d",
       trans_id, trans.get_address(), mst_id, slv_id);
@@ -567,7 +587,6 @@ CROSSBAR::nb_transport_bw(
       trans.acquire();
       phase = tlm::END_RESP;
       m_slv_rsp_arb_event[slv_id].notify();
-      m_slv_rsp_pend_num[slv_id]++;
       D("rsp received: gp_id: %llu, addr: %llx, mst_id: %d, slv_id: %d", 
         trans_id, trans.get_address(), mst_id, slv_id);
       return tlm::TLM_COMPLETED;

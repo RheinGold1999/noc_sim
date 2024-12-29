@@ -19,6 +19,7 @@ std::ostream& operator << (std::ostream& os, tlm::tlm_generic_payload& gp)
   os << "id: " << std::dec << tlm_gp_mm::get_id(&gp)
     << ", addr: 0x" << std::hex << gp.get_address()
     << ", data_len: " << std::dec << gp.get_data_length()
+    << ", ptr: " << std::hex << (void*) (&gp)
     ;
   return os;
 }
