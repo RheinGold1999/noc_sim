@@ -424,28 +424,6 @@ CROSSBAR::req_arb_thread(int mst_id)
   while (true) {
     wait(m_mst_req_arb_event[mst_id]);
 
-    // while (m_mst_req_pend_num[mst_id] > 0) {
-    //   D("req to arb: mst_id: %d", mst_id);
-    //   // Arbitration via Round Robin
-    //   do {
-    //     slv_id_rr = (slv_id_rr + 1) % NR_OF_INITIATORS;
-    //   } while (m_slv_req_buf[slv_id_rr][mst_id] == nullptr);
-
-    //   D("req arb res: mst_id: %d, slv_id_rr: %d, addr: %llx",
-    //     mst_id, slv_id_rr, m_slv_req_buf[slv_id_rr][mst_id]->get_address());
-
-    //   for (unsigned slv_id = 0; slv_id < NR_OF_INITIATORS; ++slv_id) {
-    //     D("m_slv_req_buf[%d][%d]: %p, addr: %llx",
-    //       slv_id, mst_id, m_slv_req_buf[slv_id][mst_id],
-    //       (m_slv_req_buf[slv_id][mst_id] ? m_slv_req_buf[slv_id][mst_id]->get_address() : 0));
-    //   }
-
-    //   m_mst_req_arb_res[mst_id] = slv_id_rr;
-    //   m_mst_begin_req_event[mst_id].notify();
-
-    //   wait(m_mst_end_req_event[mst_id]);
-    // }
-
     for (unsigned i = 0; i < NR_OF_INITIATORS; ++i) {
       unsigned slv_id = slv_id_rr % NR_OF_INITIATORS;
       if (m_slv_req_buf[slv_id][mst_id] != nullptr) {
@@ -471,28 +449,6 @@ CROSSBAR::rsp_arb_thread(int slv_id)
   
   while (true) {
     wait(m_slv_rsp_arb_event[slv_id]);
-
-    // while (m_slv_rsp_pend_num[slv_id] > 0) {
-    //   D("rsp to arb: slv_id: %d", slv_id);
-    //   // Arbitration via Round Robin
-    //   do {
-    //     mst_id_rr = (mst_id_rr + 1) % NR_OF_TARGETS;
-    //   } while (m_mst_rsp_buf[mst_id_rr][slv_id] == nullptr);
-
-    //   D("rsp arb res: slv_id: %d, mst_id_rr: %d, addr: %llx",
-    //     slv_id, mst_id_rr, m_mst_rsp_buf[mst_id_rr][slv_id]->get_address());
-
-    //   for (unsigned mst_id = 0; mst_id < NR_OF_TARGETS; ++mst_id) {
-    //     D("m_mst_rsp_buf[%d][%d]: %p, addr: %llx",
-    //       mst_id, slv_id, m_mst_rsp_buf[mst_id][slv_id],
-    //       (m_mst_rsp_buf[mst_id][slv_id] ? m_mst_rsp_buf[mst_id][slv_id]->get_address() : 0));
-    //   }
-
-    //   m_slv_rsp_arb_res[slv_id] = mst_id_rr;
-    //   m_slv_begin_rsp_event[slv_id].notify();
-
-    //   wait(m_slv_end_rsp_event[slv_id]);
-    // }
 
     for (unsigned i = 0; i < NR_OF_TARGETS; ++i) {
       unsigned mst_id = mst_id_rr % NR_OF_TARGETS;
