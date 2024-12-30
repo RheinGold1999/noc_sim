@@ -350,6 +350,7 @@ CROSSBAR::request_thread(int mst_id)
     }
 
     m_mst_req_arb_event[mst_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
+    wait(m_period);
   }
 }
 
@@ -412,6 +413,7 @@ CROSSBAR::response_thread(int slv_id)
     }
 
     m_slv_rsp_arb_event[slv_id].notify(m_period); // ATTENTION: must notify the arbiter in next cycle
+    wait(m_period);
   }
 }
 
