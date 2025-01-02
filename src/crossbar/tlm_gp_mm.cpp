@@ -91,7 +91,7 @@ void
 tlm_gp_mm::set_id(tlm::tlm_generic_payload* gp, trans_id_t id)
 {
   extension_trans_id* trans_id = gp->get_extension<extension_trans_id>();
-  assert(trans_id);
+  sc_assert(trans_id);
   D("ASSIGN_NEW_ID: change id from %llu to %llu", trans_id->m_trans_id, id);
   trans_id->m_trans_id = id;
 }
