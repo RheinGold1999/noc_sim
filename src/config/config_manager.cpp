@@ -3,7 +3,7 @@
 #include "config/config_manager.h"
 #include "config/global_config.h"
 #include "config/noc_config.h"
-#include "log/logger.h"
+// #include "log/logger.h"
 
 std::map<const std::string, ConfigManager::param_map_type*>
 ConfigManager::cfg_map = {
@@ -31,7 +31,8 @@ ConfigManager::parse_args(int argc, char** argv)
         }
       }
       if (!is_found_in_cfg_map) {
-        _ERROR("config parameter `{}` does NOT exist!!!", opt);
+        // _ERROR("config parameter `{}` does NOT exist!!!", opt);
+        std::cerr << "config parameter `" << opt << "` does NOT exist!!!" << std::endl;
         abort();
       }
     }
@@ -49,7 +50,11 @@ ConfigManager::update_param(
   static std::regex name_pat("-{1,2}(?:cfg|config)\\S*\\.(\\w+)");
   static std::smatch name_matchs;
   bool name_matched = std::regex_match(opt, name_matchs, name_pat);
-  _ASSERT(name_matched);
+  // _ASSERT(name_matched);
+  if (!name_matched) {
+    std::cerr << "name " << opt << " NOT matched" << std::endl;
+    abort();
+  }
   std::string param_name = name_matchs[1];
 
   static std::regex type_int_dec_pat("(\\d+)");
@@ -68,13 +73,13 @@ ConfigManager::update_param(
       double param_val = std::stod(val);
       ConfigManager::map_check_and_set<double>(param_map, param_name, param_val);
     } else {
-      // std::cout << "parameter `" << param_name << "` type doesn't found!!!" << std::endl;
-      _ERROR("parameter `{}` type does NOT found!!!", param_name);
+      // _ERROR("parameter `{}` type does NOT found!!!", param_name);
+      std::cerr << "parameter `" << param_name << "` type doesn't found!!!" << std::endl;
       abort();
     }
   } else {
-    // std::cout << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
-    _ERROR("parameter `{}` does NOT exist!!!", param_name);
+    // _ERROR("parameter `{}` does NOT exist!!!", param_name);
+    std::cerr << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
     abort();
   }
 }
@@ -88,13 +93,13 @@ ConfigManager::map_check_and_set(
 )
 {
   if (param_map.count(param_name) != 1) {
-    // std::cout << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
-    _ERROR("parameter `{}` does NOT exist!!!", param_name);
+    // _ERROR("parameter `{}` does NOT exist!!!", param_name);
+    std::cerr << "parameter `" << param_name << "` doesn't exist!!!" << std::endl;
     abort();
   }
   if (param_map[param_name]->m_type != typeid(T)) {
-    // std::cout << "parameter `" << param_name << "` type doesn't match!!!" << std::endl;
-    _ERROR("parameter `{}` type does NOT match!!!", param_name);
+    // _ERROR("parameter `{}` type does NOT match!!!", param_name);
+    std::cerr << "parameter `" << param_name << "` type doesn't match!!!" << std::endl;
     abort();
   }
   reinterpret_cast<Parameter<T>*>(param_map[param_name])->set_val(param_val);
