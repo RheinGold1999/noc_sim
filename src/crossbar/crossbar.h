@@ -512,6 +512,7 @@ CROSSBAR::nb_transport_fw(
       trans_id, trans.get_address(), slv_id);
     return tlm::TLM_COMPLETED;
   } else {
+    D("unsupported phase: %s", phase.get_name());
     SC_REPORT_ERROR("TLM-2", 
       "phase in nb_transport_fw call should be `BEGEN_REQ` or `END_RESP`");
     sc_assert(false);

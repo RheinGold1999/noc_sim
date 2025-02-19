@@ -13,7 +13,7 @@ class Router
 {
 public:
   Router(const ModelBase* parent, const std::string& name);
-  virtual ~Router() = 0;  // make Router a abstract class
+  virtual ~Router() = 0;  // make Router an abstract class
 
   virtual void transfer() override;
   virtual void process() override;
