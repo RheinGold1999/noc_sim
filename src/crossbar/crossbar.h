@@ -593,7 +593,7 @@ CROSSBAR::decode_addr(transaction_type& trans, ConnectionInfo& connect_info)
 {
   uint64_t ori_addr = (uint64_t)trans.get_address();
   AddrMapRule matched_rule = m_addr_dec.get_matched_rule(ori_addr);
-  D("ori_addr: 0x%llx, mst_id: %d", ori_addr, matched_rule.id);
+  D("ori_addr: 0x%lx, mst_id: %d", ori_addr, matched_rule.id);
   connect_info.mst_id = matched_rule.id;
   connect_info.map_addr = ori_addr - matched_rule.base_addr;
 }
