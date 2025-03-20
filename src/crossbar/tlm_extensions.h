@@ -21,5 +21,26 @@ private:
   trans_id_t m_trans_id{0};
 };
 
+class extension_burst_id
+: public tlm::tlm_extension<extension_burst_id>
+{
+public:
+  extension_burst_id();
+  extension_burst_id(const extension_burst_id& other);
+
+  void copy_from(const tlm::tlm_extension_base& ext);
+  tlm::tlm_extension_base* clone() const;
+
+  void set_burst_id(int idx, int burst_id);
+  int get_burst_id(int idx);
+  void init();
+  void destory();
+
+  static const int SIZE = 16;
+
+private:
+  int* ptr{nullptr};
+};
+
 
 #endif /* __TLM_EXTENSIONS_H__ */
