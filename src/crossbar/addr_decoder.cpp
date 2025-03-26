@@ -56,7 +56,7 @@ AddrDecoder::operator = (const AddrDecoder& other)
 AddrMapRule
 AddrDecoder::get_matched_rule(uint64_t addr) const
 {
-  D("addr & (~mask) = %llx", (addr & (~(m_map_rule_vec.front().mask))));
+  D("addr & (~mask) = %lux", (addr & (~(m_map_rule_vec.front().mask))));
   for (
     auto it = m_map_rule_vec.begin()
   ; it != m_map_rule_vec.end()
@@ -67,7 +67,7 @@ AddrDecoder::get_matched_rule(uint64_t addr) const
       return *it;
     }
   }
-  D("addr=0x%llx", addr);
+  D("addr=0x%lux", addr);
   sc_assert(false && "address decoding failed");
   return m_map_rule_vec.back();
 }

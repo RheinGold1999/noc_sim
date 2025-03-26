@@ -33,6 +33,8 @@ public:
 
   void set_burst_id(int idx, int burst_id);
   int get_burst_id(int idx);
+  void set_burst_len(int len);
+  int get_burst_len();
   void init();
   void destory();
 
@@ -40,6 +42,7 @@ public:
 
 private:
   int* ptr{nullptr};
+  int burst_len{0};
 };
 
 

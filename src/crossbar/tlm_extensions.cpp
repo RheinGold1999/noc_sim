@@ -34,12 +34,14 @@ extension_burst_id::extension_burst_id(const extension_burst_id& other)
   sc_assert(ptr == nullptr);
   sc_assert(other.ptr != nullptr);
   ptr = other.ptr;
+  burst_len = other.burst_len;
 }
 
 void
 extension_burst_id::copy_from(const tlm::tlm_extension_base& ext)
 {
   ptr = dynamic_cast<const extension_burst_id*>(&ext)->ptr;
+  burst_len = dynamic_cast<const extension_burst_id*>(&ext)->burst_len;
 }
 
 tlm::tlm_extension_base*
@@ -62,6 +64,18 @@ extension_burst_id::get_burst_id(int idx)
 {
   sc_assert(idx < SIZE);
   return ptr[idx];
+}
+
+void
+extension_burst_id::set_burst_len(int len)
+{
+  burst_len = len;
+}
+
+int
+extension_burst_id::get_burst_len()
+{
+  return burst_len;
 }
 
 void
