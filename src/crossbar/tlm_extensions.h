@@ -40,6 +40,8 @@ public:
 
   static const int SIZE = 16;
 
+  bool from_lsu{true};
+
 private:
   int* ptr{nullptr};
   int burst_len{0};
